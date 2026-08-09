@@ -1,0 +1,28 @@
+# FinanceBook Admin Panel Dependencies
+# Based on financebookNeo-example/requirements.txt
+
+# Web framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+
+# Database
+sqlmodel>=0.0.22
+sqlalchemy>=2.0.0,<2.1.0
+psycopg2-binary>=2.9.10
+
+# Authentication
+bcrypt>=4.0.0
+itsdangerous>=2.1.0
+python-multipart>=0.0.20
+
+# Templates
+jinja2>=3.1.0
+
+# Scientific computing (for fee_engine.py)
+numpy>=1.26.0
+
+# JWT support (if needed later)
+python-jose[cryptography]>=3.3.0
+
+# Environment variables
+python-dotenv>=1.0.0

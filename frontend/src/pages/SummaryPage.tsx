@@ -1,0 +1,1036 @@
+
+/**
+ * "Summary" screen – displays all payment items in a descending timeline with a
+ * running total at the end.  Users can filter by incomes/expenses via the
+ * NavigationBar.
+ *
+ * State Flow:
+ * 
+ * NavigationBar (presentational) <-> SummaryPage (filter + data fetching)
+ * items -> PaymentList (presentational)
+ */
+
+// section for the tools to build this page
+import React, { useCallback, useState, useMemo, useEffect } from 'react';
+// helpers from React Router that let us work with the URL
+import { useSearchParams, useNavigate } from 'react-router-dom';
+// tools for creation and styling own components
+import styled from 'styled-components';
+// helper for formatting dates
+import { format, parseISO } from 'date-fns';
+
+// import the SVG icons from the assets folder
+import UpIcon from '../assets/up.svg';
+import DownIcon from '../assets/down.svg';
+import ArrowLeftIcon from '../assets/arrow-left.svg';
+import ArrowRightIcon from '../assets/arrow-right.svg';
+import PeriodicIcon from '../assets/periodic-icon.svg';
+
+// import the type for the view filter
+import { ViewFilter } from '../components/NavigationBar';
+// imports the functions that let us fetch data from our app's server.
+import { usePaymentItems, useAllCategories, useCategoryTypes, useRecipient, downloadInvoice } from '../api/hooks';
+// import data structures for payment items and categories.
+import { PaymentItem, isExpense, Category } from '../types';
+
+
+/* Styled Components */
+
+
+// container for the sort icons
+const SortIconsContainer = styled.div`
+  display: flex; // Arranges the icons in a row.
+  align-items: center; // Vertically centers the icons.
+  gap: 0.5rem; // Adds a small space between the icons.
+`;
+
+// wrapper for each individual icon to handle hover effects
+const IconWrapper = styled.div<{ $active?: boolean }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.3rem;
+  transition: background-color 0.2s ease-in-out;
+  border-radius: var(--radius-sm);
+  background-color: ${({ $active }) => ($active ? '#444' : 'transparent')};
+
+  img {
+    width: 25px; // Sets the width of the icon.
+    height: 26px; // Sets the height of the icon.
+    cursor: pointer; // Shows a hand cursor, indicating it's clickable.
+  }
+
+  // On hover, a background color is added to give feedback to the user.
+  &:hover {
+    background-color: #444;
+  }
+`;
+
+//  container for our category filter section
+const CategoryFilterWrapper = styled.div`
+  padding: 1rem; //  adds some space inside the container.
+  margin-bottom: 1rem; //  adds some space below the container.
+  background: #2a2a2a; //  sets the background color.
+  border-radius: var(--radius-lg); //  rounds the corners of the container.
+  border: 1px solid #444; //  adds a border around the container.
+
+  h3 {
+    margin: 0 0 1rem 0; //  adds some space below the title.
+    font-size: 1rem; //  sets the font size.
+    color: #eaeaea; //  sets the text color.
+  }
+`;
+
+//  container for the category dropdown and the "Add Category" button
+const CategoryDropdownContainer = styled.div`
+  display: flex; //  arranges the items in a row.
+  gap: 0.5rem; //  adds some space between the items.
+  margin-bottom: 1rem; //  adds some space below the container.
+  align-items: center; //  vertically aligns the items in the center.
+  flex-wrap: wrap; //  stack dropdown and button on narrow screens.
+
+  select {
+    min-width: 12rem; //  keep the dropdown usable when it wraps.
+  }
+
+  select {
+    flex: 1; //  makes the dropdown take up as much space as possible.
+    padding: 0.5rem; //  adds some space inside the dropdown.
+    background-color: #333; //  sets the background color.
+    color: #eaeaea; //  sets the text color.
+    border: 1px solid #555; //  adds a border around the dropdown.
+    border-radius: var(--radius-md); //  rounds the corners of the dropdown.
+    font-size: 0.9rem; //  sets the font size.
+
+    // When you click on the dropdown, we highlight it with a green border.
+    &:focus {
+      outline: none; //  removes the default blue outline.
+      border-color: var(--color-positive); //  sets the border color to green.
+    }
+  }
+`;
+
+//  "Add Category" button
+const AddCategoryButton = styled.button`
+  background: var(--color-positive); //  sets the background color to green.
+  color: white; //  sets the text color to white.
+  border: none; //  removes the button border.
+  padding: 0.5rem 1rem; //  adds some space inside the button.
+  border-radius: var(--radius-md); //  rounds the corners of the button.
+  font-size: 0.9rem; //  sets the font size.
+  cursor: pointer; //  shows a hand cursor when you hover over the button.
+  white-space: nowrap; //  prevents the text from wrapping to the next line.
+  transition: background-color 0.2s ease; //  creates a smooth color change on hover.
+
+  //  makes the button a darker green when you hover over it.
+  &:hover {
+    background: #059669;
+  }
+
+  //  styles the button when it's disabled.
+  &:disabled {
+    background: #666; //  sets a grey background color.
+    cursor: not-allowed; //  shows a "not allowed" cursor.
+  }
+`;
+
+//  container for the selected category tags
+const SelectedCategoriesContainer = styled.div`
+  display: flex; //  arranges the tags in a row.
+  flex-wrap: wrap; //  allows the tags to wrap to the next line if there's not enough space.
+  gap: 0.5rem; //  adds some space between the tags.
+  margin-bottom: 1rem; //  adds some space below the container.
+  min-height: 2rem; //  sets a minimum height for the container.
+  align-items: flex-start; //  aligns the tags to the top of the container.
+`;
+
+//  single category tag
+const CategoryTag = styled.div`
+  background: #444; //  sets the background color.
+  color: #eaeaea; //  sets the text color.
+  padding: 0.25rem 0.75rem; //  adds some space inside the tag.
+  border-radius: var(--radius-md); //  rounds the corners of the tag.
+  font-size: 0.8rem; //  sets the font size.
+  display: flex; //  arranges the items in a row.
+  align-items: center; //  vertically aligns the items in the center.
+  gap: 0.5rem; //  adds some space between the items.
+
+  button {
+    background: none; //  makes the button background transparent.
+    border: none; //  removes the button border.
+    color: #aaa; //  sets the text color.
+    cursor: pointer; //  shows a hand cursor when you hover over the button.
+    padding: 0; //  removes the default padding.
+    font-size: 1rem; //  sets the font size.
+    line-height: 1; //  sets the line height.
+
+    //  changes the color of the "x" when you hover over it.
+    &:hover {
+      color: #fff;
+    }
+  }
+`;
+
+//  "Reset All" button for the category filters
+const ResetButton = styled.button`
+  background: #666; //  sets the background color.
+  color: white; //  sets the text color.
+  border: none; //  removes the button border.
+  padding: 0.25rem 0.5rem; //  adds some space inside the button.
+  border-radius: var(--radius-md); //  rounds the corners of the button.
+  font-size: 0.8rem; //  sets the font size.
+  cursor: pointer; //  shows a hand cursor when you hover over the button.
+  align-self: flex-end; //  aligns the button to the bottom of the container.
+  margin-left: auto; //  pushes the button to the right.
+
+  //  changes the background color when you hover over the button.
+  &:hover {
+    background: #777;
+  }
+`;
+
+//  message we show when there are no category filters applied
+const EmptyState = styled.div`
+  color: #888; //  sets the text color.
+  font-size: 0.8rem; //  sets the font size.
+  font-style: italic; //  makes the text italic.
+`;
+
+//  list that will contain our payment items
+const List = styled.ul`
+  list-style: none; //  removes the default bullet points.
+  padding: 0; //  removes the default padding.
+  margin: var(--spacing-md) 0; //  adds some space above and below the list.
+  display: flex; //  arranges the items in a flexible way.
+  flex-direction: column; //  stacks the items vertically.
+  gap: var(--spacing-sm); //  adds some space between the items.
+`;
+
+//  single payment item in our list
+const Entry = styled.li`
+  background: #333; //  sets the background color.
+  border-radius: var(--radius-lg); //  rounds the corners of the item.
+  padding: var(--spacing-md); //  adds some space inside the item.
+  display: flex; //  arranges the content of the item in a flexible way.
+  align-items: stretch; //  makes the content of the item stretch to fill the height.
+  gap: var(--spacing-md); //  adds some space between the content items.
+  width: 100%; //  makes the item take up the full width of its container.
+  box-sizing: border-box; //  makes sure the padding and border are included in the total width.
+  position: relative; //  allows us to position the download link absolutely within the entry.
+
+  @media (max-width: 480px) {
+    padding: var(--spacing-sm); // tighter cards on phones
+    gap: var(--spacing-sm);
+  }
+`;
+
+//  container for the category icon (previously used for payment item images)
+const ImageHolder = styled.div`
+  flex: 0 0 28%; //  makes the icon container take up 25% of the width of the item.
+  min-width: 60px; //  sets a minimum width for smaller screens.
+  max-width: 120px; //  sets a maximum width for the icon container.
+  aspect-ratio: 1 / 1; //  makes the icon container a square.
+  border-radius: var(--radius-md); //  rounds the corners of the icon container.
+  background-color: #333; //  matches the Entry background color for seamless icon background rendering.
+  overflow: hidden; //  hides any part of the icon that goes outside the container.
+  display: flex; //  arranges the content of the container in a flexible way.
+  align-items: center; //  vertically aligns the content in the center.
+  justify-content: center; //  horizontally aligns the content in the center.
+  position: relative; //  allows for proper positioning of the icon.
+
+  img {
+    width: 67%; //  makes the icon take up 70% of the container width for proper sizing.
+    height: 67%; //  makes the icon take up 70% of the container height for proper sizing.
+    object-fit: contain; //  preserves the icon's aspect ratio and prevents distortion.
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3)); //  adds a subtle shadow for better visibility.
+    transition: transform 0.2s ease; //  adds a smooth transition for hover effects.
+  }
+
+  // Responsive sizing for different screen sizes
+  @media (max-width: 768px) {
+    flex: 0 0 20%; // Smaller percentage on mobile devices.
+    min-width: 50px; // Smaller minimum width on mobile.
+    max-width: 80px; // Smaller maximum width on mobile.
+    
+    img {
+      width: 75%; // Slightly larger icon percentage on smaller screens for better visibility.
+      height: 75%;
+    }
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 140px; // Larger maximum width on larger screens.
+    
+    img {
+      width: 65%; // Slightly smaller icon percentage on larger screens for better proportions.
+      height: 65%;
+    }
+  }
+
+`;
+
+//  container for the main content of the payment item, to the right of the image
+const ContentWrapper = styled.div`
+  flex: 1 1 auto; //  makes the container take up as much space as possible.
+  display: flex; //  arranges the content of the container in a flexible way.
+  flex-direction: column; //  stacks the content vertically.
+  justify-content: space-between; //  spreads out the content to fill the available space.
+`;
+
+//  container for the date and other meta information
+const MetaInfo = styled.div`
+  display: flex; //  arranges the items in a flexible way.
+  flex-direction: column; //  stacks the items vertically.
+  gap: var(--spacing-xs); //  adds some space between the items.
+`;
+
+//  text for the date
+const DateText = styled.span`
+  font-size: 0.9rem; //  sets the font size.
+  color: var(--color-text-secondary); //  sets the text color.
+  margin-bottom: var(--spacing-sm); //  adds some space below the date.
+  display: flex; //  keeps date text and periodic icon on the same row.
+  align-items: center;
+  gap: 0.35rem;
+`;
+
+//  container for the recipient information
+const RecipientInfo = styled.div`
+  font-size: 0.8rem; //  sets the font size.
+  color: #bbb; //  sets the text color.
+  margin-bottom: var(--spacing-xs); //  adds some space below the container.
+  
+  .name {
+    font-weight: 500; //  makes the font bold.
+    color: #ddd; //  sets the text color.
+  }
+  
+  .address {
+    font-size: 0.75rem; //  sets the font size.
+    color: #999; //  sets the text color.
+    margin-top: 2px; //  adds some space above the address.
+  }
+`;
+
+
+
+//  container for the amount, which pushes it to the right side of the item
+const AmountContainer = styled.div`
+  margin-left: auto; //  pushes the container to the right.
+  text-align: right; //  aligns the text to the right.
+  position: relative; //  allows us to position the download link absolutely.
+`;
+
+//  download link for invoice files
+const DownloadLink = styled.a`
+  position: absolute; //  positions the link absolutely within the Entry.
+  top: 1rem; //  positions the link at the top of the entry.
+  right: 1rem; //  positions the link at the right of the entry.
+  color:rgb(6, 116, 233); //  sets the text color to blue.
+  font-size: 0.9rem; //  sets the font size slightly bigger.
+  text-decoration: none; //  removes the underline.
+  cursor: pointer; //  shows a hand cursor when you hover over the link.
+  padding: 0.25rem 0.5rem; //  adds some padding for better click area.
+  border-radius: var(--radius-sm); //  rounds the corners.
+  transition: all 0.2s ease; //  creates a smooth transition on hover.
+  //background-color: rgba(0, 123, 255, 0.1);  adds a subtle background.
+  z-index: 10; //  ensures the link appears above other elements.
+
+  &:hover {
+    // background-color: rgba(0, 123, 255, 0.2);  adds a stronger background on hover.
+    text-decoration: underline; //  adds an underline on hover.
+    color:rgb(0, 123, 255); //  makes the color darker on hover.
+  }
+`;
+
+// Inline icon for periodic/recurring payments — shown after date text
+const PeriodicInlineIcon = styled.img`
+  width: 16px;
+  height: 16px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  opacity: 0.85;
+`;
+
+//  text for the amount
+const AmountText = styled.span<{ $negative: boolean }>`
+  font-size: 1.5rem; //  sets the font size.
+  font-weight: bold; //  makes the font bold.
+  //  sets the text color to red for expenses and green for incomes.
+  color: ${({ $negative }) =>
+    $negative ? 'var(--color-negative)' : 'var(--color-positive)'};
+  display: block; //  makes the amount take up its own line.
+`;
+
+//  container for the "Total" row at the bottom of the list
+const TotalEntry = styled(Entry)`
+  background: #444; //  sets a different background color for the total row.
+  margin-top: var(--spacing-md); //  adds some space above the total row.
+  border-top: 1px solid #555; //  adds a line above the total row.
+  font-weight: bold; //  makes the font bold.
+`;
+
+//  label for the total row, "SUM"
+const TotalLabel = styled.div`
+    flex: 1 1 auto; //  makes the label take up as much space as possible.
+    font-size: 1.2rem; //  sets the font size.
+`;
+
+// Inline pagination bar — spans the content column.
+// (The previous 100vw negative-margin breakout caused a horizontal scrollbar
+// because 100vw includes the vertical scrollbar width.)
+const PaginationSection = styled.section`
+  margin-top: auto;
+  margin-bottom: 0;
+  background: var(--color-surface);
+  border: 1px solid #272727;
+  border-radius: var(--radius-lg);
+  padding: 0.5rem var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  flex-wrap: wrap;
+`;
+
+// Arrow navigation button (icon-only)
+const ArrowButton = styled.button<{ $disabled?: boolean }>`
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  margin: 0 0.5rem;
+  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'pointer')};
+  opacity: ${({ $disabled }) => ($disabled ? '0.25' : '1')};
+  transition: opacity 0.2s ease, transform 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  img {
+    width: clamp(32px, 6vw, 44px);
+    height: clamp(32px, 6vw, 44px);
+  }
+
+  &:hover:not(:disabled) {
+    opacity: 0.8;
+    transform: scale(1.15);
+  }
+`;
+
+// Center group of controls between the arrows
+const PaginationCenter = styled.div`
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+// Label text in the pagination
+const PaginationLabel = styled.span`
+  color: #888;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+`;
+
+// Action button (Apply)
+const PaginationActionButton = styled.button`
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: #0056b3;
+  }
+`;
+
+// Show All button
+const PaginationAllButton = styled.button`
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #444;
+  padding: 0.4rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: #333;
+    color: #eaeaea;
+    border-color: #555;
+  }
+`;
+
+// Number input for items per page
+const PaginationInput = styled.input`
+  width: 50px;
+  padding: 0.4rem 0.35rem;
+  background-color: #1a1a1a;
+  color: #eaeaea;
+  border: 1px solid #444;
+  border-radius: var(--radius-md);
+  font-size: 0.8rem;
+  text-align: center;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #007bff;
+  }
+
+  /* Remove spinner arrows */
+  &::-webkit-inner-spin-button,
+  &::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  -moz-appearance: textfield;
+`;
+
+// Page indicator
+const PageIndicator = styled.span`
+  color: #999;
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  
+  strong {
+    color: #eaeaea;
+  }
+`;
+
+// Vertical separator between control groups
+const PaginationSeparator = styled.span`
+  width: 1px;
+  height: 1.2rem;
+  background: #444;
+  flex-shrink: 0;
+`;
+
+
+/* Component */
+
+interface SortIconsProps {
+  sortOrder: 'asc' | 'desc';
+  onSortAsc: () => void;
+  onSortDesc: () => void;
+}
+
+/**
+ * SortIcons component renders the up and down arrows for sorting.
+ * - 'up.svg' is for descending order.
+ * - 'down.svg' is for ascending order.
+ */
+const SortIcons: React.FC<SortIconsProps> = ({
+  sortOrder,
+  onSortAsc,
+  onSortDesc,
+}) => (
+  <SortIconsContainer>
+    <IconWrapper onClick={onSortDesc} $active={sortOrder === 'desc'}>
+      <img id="sort-desc-icon" src={UpIcon} alt="Sort descending by date" />
+    </IconWrapper>
+    <IconWrapper onClick={onSortAsc} $active={sortOrder === 'asc'}>
+      <img id="sort-asc-icon" src={DownIcon} alt="Sort ascending by date" />
+    </IconWrapper>
+  </SortIconsContainer>
+);
+
+//  main component for our summary page
+const SummaryPage: React.FC = () => {
+  // These are helpers from React Router that let us work with the URL
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  //  gets the current view filter ("all", "expenses", or "incomes") from the URL
+  const viewFilter = (searchParams.get('filter') as ViewFilter) || 'all';
+
+  //  read category filters directly from URL - single source of truth
+  const selectedCategoryIds = useMemo(() => {
+    return searchParams.getAll('categories').map(id => parseInt(id, 10)).filter(id => !isNaN(id));
+  }, [searchParams]);
+
+  const [selectedDropdownCategory, setSelectedDropdownCategory] = useState<number | ''>('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Pagination state
+  const [itemsPerPage, setItemsPerPage] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [inputValue, setInputValue] = useState<string>('10');
+
+  //  fetches all the categories and category types from the server
+  const { data: allCategories = [], isLoading: isLoadingCategories } = useAllCategories();
+  const { data: categoryTypes = [] } = useCategoryTypes();
+  //  finds the ID of the "standard" category type
+  const standardTypeId = useMemo(() => categoryTypes.find(t => t.name === 'standard')?.id, [categoryTypes]);
+
+  //  fetches the payment items from the server, based on the current filters
+  const queryResult = usePaymentItems({
+    expenseOnly: viewFilter === 'expenses',
+    incomeOnly: viewFilter === 'incomes',
+    categoryIds: selectedCategoryIds,
+  });
+
+  //  get the payment items, loading state, and error state from the query result
+  const queryData: PaymentItem[] | undefined = queryResult.data;
+  const isLoading: boolean = queryResult.isLoading;
+  const error: Error | null = queryResult.error;
+
+  //  makes sure that we always have an array of payment items to work with, even if the data is still loading
+  const paymentDataForMemo: PaymentItem[] = queryData ?? [];
+
+
+  /* Derived Data */
+
+  // Filter for fees if selected
+  const filteredData = useMemo(() => {
+    if (viewFilter === 'fees') {
+      // "The transaction fee of a payment is always zero if it is lower than 0.005"
+      // "Every time there is a payment item with a transaction fee (with at least 0,01) we create a special fee payment item"
+      return paymentDataForMemo.filter(item => (item.transaction_fee || 0) >= 0.01);
+    }
+    return paymentDataForMemo;
+  }, [paymentDataForMemo, viewFilter]);
+
+  //  sorts the payment items by date, with the most recent items first
+  const sorted: PaymentItem[] = useMemo(() => {
+    return [...filteredData].sort((a: PaymentItem, b: PaymentItem) => {
+      const dateA = new Date(a.date).getTime();
+      const dateB = new Date(b.date).getTime();
+      if (sortOrder === 'desc') {
+        return dateB - dateA;
+      }
+      return dateA - dateB;
+    });
+  }, [filteredData, sortOrder]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(sorted.length / itemsPerPage);
+  const paginatedItems = useMemo(() => {
+    const startIndex = currentPage * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return sorted.slice(startIndex, endIndex);
+  }, [sorted, currentPage, itemsPerPage]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [viewFilter, selectedCategoryIds, sortOrder]);
+
+  //  calculates the total amount of all the payment items
+  const total: number = useMemo(() => {
+    if (viewFilter === 'fees') {
+      return filteredData.reduce(
+        (sum: number, item: PaymentItem) => sum + (item.transaction_fee || 0),
+        0
+      );
+    }
+    return filteredData.reduce(
+      (sum: number, item: PaymentItem) => sum + item.amount,
+      0
+    );
+  }, [filteredData, viewFilter]);
+
+  //  gets the full category objects for the selected category IDs
+  const selectedCategories = useMemo(() => {
+    return allCategories.filter(cat => cat.name !== "UNCLASSIFIED" && selectedCategoryIds.includes(cat.id));
+  }, [allCategories, selectedCategoryIds]);
+
+
+  /* Callbacks */
+
+  //  helper function to update category IDs in URL
+  const updateCategoryFilters = useCallback((categoryIds: number[]) => {
+    const newSearchParams = new URLSearchParams(searchParams);
+
+    //  remove the old category filters from the URL
+    newSearchParams.delete('categories');
+
+    //  add the new category filters to the URL
+    categoryIds.forEach(id => newSearchParams.append('categories', id.toString()));
+
+    setSearchParams(newSearchParams, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // function for "Add Category" button
+  const handleAddCategory = useCallback(() => {
+    if (selectedDropdownCategory && !selectedCategoryIds.includes(selectedDropdownCategory as number)) {
+      updateCategoryFilters([...selectedCategoryIds, selectedDropdownCategory as number]);
+      setSelectedDropdownCategory('');
+    }
+  }, [selectedDropdownCategory, selectedCategoryIds, updateCategoryFilters]);
+
+  // function for the "x" on a category tag
+  const handleRemoveCategory = useCallback((categoryId: number) => {
+    updateCategoryFilters(selectedCategoryIds.filter(id => id !== categoryId));
+  }, [selectedCategoryIds, updateCategoryFilters]);
+
+  //  function for the "Reset All" button
+  const handleResetFilters = useCallback(() => {
+    updateCategoryFilters([]);
+  }, [updateCategoryFilters]);
+
+  // function for the menu icon.
+  const handleMenu = useCallback(() => {
+    // in the future, this will open a side menu.
+    console.info('Menu clicked');
+  }, []);
+
+  // function for the "ADD" button.
+  const handleAdd = useCallback(() => {
+    navigate('/add');
+  }, [navigate]);
+
+  // Pagination handlers
+  const handleShowClick = useCallback(() => {
+    const value = parseInt(inputValue, 10);
+    if (!isNaN(value) && value > 0) {
+      setItemsPerPage(value);
+      setCurrentPage(0); // Reset to first page
+    }
+  }, [inputValue]);
+
+  const handlePreviousPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => Math.min(totalPages - 1, prev + 1));
+  }, [totalPages]);
+
+  const handleInputKeyPress = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleShowClick();
+    }
+  }, [handleShowClick]);
+
+  const handleAllClick = useCallback(() => {
+    setInputValue(sorted.length.toString());
+  }, [sorted.length]);
+
+
+  /* Render */
+
+  // if there was an error fetching the payment items, show an error message
+  if (error) return <p>Error: {error.message}</p>;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 auto' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '1rem',
+          gap: '0.5rem',
+        }}
+      >
+        <h2>Payments</h2>
+        <SortIcons
+          sortOrder={sortOrder}
+          onSortAsc={() => setSortOrder('asc')}
+          onSortDesc={() => setSortOrder('desc')}
+        />
+      </div>
+      {viewFilter !== 'fees' && (
+        <CategoryFilterWrapper>
+          <h3>Filter by Categories</h3>
+
+          <CategoryDropdownContainer>
+            <select
+              value={selectedDropdownCategory}
+              onChange={(e) => setSelectedDropdownCategory(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
+              disabled={isLoadingCategories}
+            >
+              <option value="">Select a category...</option>
+              {allCategories
+                .filter(cat => cat.name !== "UNCLASSIFIED" && !selectedCategoryIds.includes(cat.id))
+                .map(cat => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))
+              }
+            </select>
+            <AddCategoryButton
+              onClick={handleAddCategory}
+              disabled={!selectedDropdownCategory || isLoadingCategories}
+            >
+              Add Category
+            </AddCategoryButton>
+          </CategoryDropdownContainer>
+
+          <SelectedCategoriesContainer>
+            {selectedCategories.length === 0 ? (
+              <EmptyState>No category filters applied - showing all payments</EmptyState>
+            ) : (
+              <>
+                {selectedCategories.map(cat => (
+                  <CategoryTag key={cat.id}>
+                    {cat.name}
+                    <button onClick={() => handleRemoveCategory(cat.id)} aria-label={`Remove ${cat.name} filter`}>
+                      ×
+                    </button>
+                  </CategoryTag>
+                ))}
+                <ResetButton onClick={handleResetFilters}>
+                  Reset All
+                </ResetButton>
+              </>
+            )}
+          </SelectedCategoriesContainer>
+
+          {isLoadingCategories && <p>Loading categories...</p>}
+        </CategoryFilterWrapper>
+      )}
+
+      {isLoading ? (
+        <p>Loading payment items…</p>
+      ) : (
+        <List>
+          {paginatedItems.map(item => (
+            viewFilter === 'fees' ? (
+              <FeeItemLine
+                key={item.id}
+                item={item}
+              />
+            ) : (
+              <PaymentItemLine
+                key={item.id}
+                item={item}
+                allCategories={allCategories}
+              />
+            )
+          ))}
+
+          {/* Total row */}
+          <TotalEntry>
+            <TotalLabel>SUM</TotalLabel>
+            <AmountContainer>
+              <AmountText $negative={viewFilter === 'fees' || total < 0}>
+                {total.toFixed(2)} €
+              </AmountText>
+            </AmountContainer>
+          </TotalEntry>
+        </List>
+      )}
+
+      {/* Inline Pagination — scrolls into view after the last item */}
+      {!isLoading && sorted.length > 0 && totalPages > 1 && (
+        <PaginationSection>
+          <ArrowButton
+            onClick={handlePreviousPage}
+            $disabled={currentPage === 0}
+            disabled={currentPage === 0}
+            aria-label="Previous page"
+          >
+            <img src={ArrowLeftIcon} alt="Previous" />
+          </ArrowButton>
+
+          <PaginationCenter>
+            <PaginationLabel>Show</PaginationLabel>
+            <PaginationInput
+              type="number"
+              min="1"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleInputKeyPress}
+              onFocus={(e) => e.target.select()}
+              aria-label="Items per page"
+            />
+            <PaginationActionButton onClick={handleShowClick}>
+              Apply
+            </PaginationActionButton>
+            <PaginationAllButton onClick={handleAllClick}>
+              All
+            </PaginationAllButton>
+            <PaginationSeparator />
+            <PageIndicator>
+              Page <strong>{currentPage + 1}</strong> of <strong>{totalPages}</strong>
+            </PageIndicator>
+          </PaginationCenter>
+
+          <ArrowButton
+            onClick={handleNextPage}
+            $disabled={currentPage >= totalPages - 1}
+            disabled={currentPage >= totalPages - 1}
+            aria-label="Next page"
+          >
+            <img src={ArrowRightIcon} alt="Next" />
+          </ArrowButton>
+        </PaginationSection>
+      )}
+    </div>
+  );
+};
+
+export default SummaryPage;
+
+
+/* Child component: PaymentItemLine  */
+
+
+// define the "props" that our PaymentItemLine component accepts
+interface PaymentItemLineProps {
+  item: PaymentItem; // payment item to display
+  allCategories: Category[]; // list of all categories
+}
+
+// displays a single payment item in our list
+const PaymentItemLine: React.FC<PaymentItemLineProps> = ({ item, allCategories }) => {
+  const navigate = useNavigate();
+  // The backend embeds the recipient in the payment item; only fall back to a
+  // dedicated request when it is missing (avoids one request per list row).
+  const { data: fetchedRecipient } = useRecipient(
+    item.recipient ? undefined : item.recipient_id ?? undefined,
+  );
+  const recipient = item.recipient ?? fetchedRecipient;
+
+  // find the icon for the payment item's standard category.
+  // We look the category up from the fresh allCategories list (keyed by standard_category_id)
+  // instead of using item.standard_category, which can be stale when an icon is updated after
+  // the payment-items cache was last populated.
+  const iconUrl = React.useMemo(() => {
+    const categoryId = item.standard_category_id;
+
+    // Prefer the fresh allCategories list; fall back to the embedded object only when
+    // allCategories hasn't loaded yet.
+    const startCategory: Category | undefined =
+      categoryId != null && allCategories.length > 0
+        ? (allCategories.find(c => c.id === categoryId) ?? item.standard_category ?? undefined)
+        : (item.standard_category ?? undefined);
+
+    if (startCategory) {
+      // Walk up the parent chain until we find an icon.
+      let current: Category | undefined = startCategory;
+      while (current) {
+        if (current.icon_file) {
+          return `/api/download_static/${current.icon_file}`;
+        }
+        current = allCategories.find(c => c.id === current?.parent_id);
+      }
+    }
+
+    return null;
+  }, [item.standard_category_id, item.standard_category, allCategories]);
+
+  const handleDoubleClick = () => {
+    navigate(`/payment/${item.id}/edit`);
+  };
+
+  const handleDownloadInvoice = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // prevent triggering the double-click edit
+    try {
+      await downloadInvoice(item.id);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+    }
+  };
+
+  return (
+    <Entry onDoubleClick={handleDoubleClick}>
+      {/* Download link for invoice - positioned at top right of entry */}
+      {item.invoice_path && (
+        <DownloadLink onClick={handleDownloadInvoice}>
+          download
+        </DownloadLink>
+      )}
+
+
+
+      <ImageHolder>
+        {iconUrl ? (
+          <img src={iconUrl} alt="Category icon" />
+        ) : (
+          // if no category icon, the area maintains the Entry background color
+          null
+        )}
+      </ImageHolder>
+
+      <ContentWrapper>
+        <MetaInfo>
+          {/* Date is above the amount (in its own block) */}
+          <DateText>
+            {format(parseISO(item.date), 'PPP, HH:mm')}
+            {item.periodic && <PeriodicInlineIcon src={PeriodicIcon} alt="Periodic" title="Periodic payment" />}
+          </DateText>
+
+          {/* Payment description */}
+          {item.description && (
+            <RecipientInfo>
+              <div className="name" style={{ fontStyle: 'italic', color: '#ddd' }}>
+                {item.description}
+              </div>
+            </RecipientInfo>
+          )}
+
+          {/* enhanced recipient information display */}
+          {recipient && (
+            <RecipientInfo>
+              <div className="name"> {isExpense(item) ? (<u>To:</u>) : (<u>From:</u>)}  {recipient.name}</div>
+              {recipient.address && (
+                <div className="address">{recipient.address}</div>
+              )}
+            </RecipientInfo>
+          )}
+
+          {/* enhanced categories display */}
+
+        </MetaInfo>
+        <AmountContainer>
+          <AmountText $negative={isExpense(item)}>
+            {item.amount.toFixed(2)} €
+          </AmountText>
+        </AmountContainer>
+      </ContentWrapper>
+    </Entry>
+  );
+};
+
+/* Child component: FeeItemLine */
+
+interface FeeItemLineProps {
+  item: PaymentItem;
+}
+
+const FeeItemLine: React.FC<FeeItemLineProps> = ({ item }) => {
+  // Safe formatting because we filter for fees existing
+  const feeAmount = item.transaction_fee || 0;
+
+  return (
+    <Entry>
+      {/* 
+        "no icon, description, recipient, preriodic icon, categories and no invoice download element" 
+        We omit ImageHolder to strictly follow "no icon".
+      */}
+
+      <ContentWrapper>
+        <MetaInfo>
+          <DateText>
+            {format(parseISO(item.date), 'PPP, HH:mm')}
+            {/* No periodic icon */}
+          </DateText>
+          {/* No description, recipient, categories */}
+        </MetaInfo>
+        <AmountContainer>
+          {/* "The amount number of the fee payment element has red color" -> $negative=true */}
+          <AmountText $negative={true}>
+            {feeAmount.toFixed(2)} €
+          </AmountText>
+        </AmountContainer>
+      </ContentWrapper>
+    </Entry>
+  );
+};

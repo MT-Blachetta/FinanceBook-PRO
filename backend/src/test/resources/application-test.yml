@@ -1,0 +1,43 @@
+# Test profile: in-memory H2 in PostgreSQL compatibility mode.
+# Flyway is disabled (the migration scripts are PostgreSQL-specific);
+# the schema is generated from the JPA entities instead.
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  datasource:
+    url: jdbc:h2:mem:financebook_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    username: sa
+    password: ""
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+  flyway:
+    enabled: false
+
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 25MB
+
+jwt:
+  secret: test-secret-key-which-is-long-enough-for-hmac-sha256-signing-0123456789
+  expiration: 1800000
+
+admin:
+  default-password: admin
+
+file:
+  upload:
+    icons-dir: ${java.io.tmpdir}/financebook-test/icons
+    invoices-dir: ${java.io.tmpdir}/financebook-test/invoices
+
+server:
+  port: 0
