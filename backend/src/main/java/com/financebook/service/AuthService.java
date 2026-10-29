@@ -13,6 +13,7 @@ import com.financebook.repository.CategoryTypeRepository;
 import com.financebook.repository.UserRepository;
 import com.financebook.security.JwtTokenProvider;
 import com.financebook.util.Constants;
+import com.financebook.util.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -77,17 +78,20 @@ public class AuthService {
             throw new ValidationException("Username already taken");
         }
         
-        // Validate password length
-        if (request.getPassword().length() < Constants.MIN_PASSWORD_LENGTH) {
-            throw new ValidationException("Password must be at least " + Constants.MIN_PASSWORD_LENGTH + " characters");
+        PasswordPolicy.validate(request.getPassword());
+
+        String surname = normalizeText(request.getSurname());
+        String prename = normalizeText(request.getPrename());
+        if (surname.isEmpty() || prename.isEmpty()) {
+            throw new ValidationException("Surname and prename are required");
         }
         
         // Create user
         User user = User.builder()
                 .username(normalizedUsername)
                 .hashedPassword(passwordEncoder.encode(request.getPassword()))
-                .surname(normalizeText(request.getSurname()))
-                .prename(normalizeText(request.getPrename()))
+                .surname(surname)
+                .prename(prename)
                 .birthDate(request.getBirthDate())
                 .phone(request.getPhone())
                 .road(request.getRoad())

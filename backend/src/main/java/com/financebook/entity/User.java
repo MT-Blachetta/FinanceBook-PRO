@@ -85,9 +85,11 @@ public class User {
     
     // Role & status
     @Column(name = "is_admin", nullable = false)
+    @Builder.Default
     private Boolean isAdmin = false;
     
     @Column(name = "is_active", nullable = false)
+    @Builder.Default
     private Boolean isActive = true;
     
     @CreatedDate

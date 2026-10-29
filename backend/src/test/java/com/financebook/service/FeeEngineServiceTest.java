@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -153,14 +154,73 @@ class FeeEngineServiceTest {
     }
 
     @Test
-    void formulaModeIsNotChargedYet() {
-        TransactionFeePlan plan = new TransactionFeePlan();
-        plan.setMode("formula");
-        plan.setFormulaText("x * 0.1");
-        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(plan));
+    void formulaModeEvaluatesTheFormulaAsAbsoluteFee() {
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(formulaPlan("x * 0.1 + 0.5")));
+
+        assertThat(service.computeFee(new BigDecimal("100.00"), USER_ID))
+                .isEqualByComparingTo("10.50");
+        // x is the absolute amount, so expenses are charged the same
+        assertThat(service.computeFee(new BigDecimal("-100.00"), USER_ID))
+                .isEqualByComparingTo("10.50");
+    }
+
+    @Test
+    void formulaModePassesPaymentFrequencyAsY() {
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(formulaPlan("10 * y")));
+        when(paymentItemRepository.countByUserId(USER_ID)).thenReturn(4L);
+        when(paymentItemRepository.countByUserIdAndAbsAmountAtLeast(USER_ID, BigDecimal.ZERO)).thenReturn(4L);
+
+        assertThat(service.computeFee(new BigDecimal("100.00"), USER_ID))
+                .isEqualByComparingTo("10.00");
+    }
+
+    @Test
+    void formulaModeFeeIsCappedAtTheAmount() {
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(formulaPlan("x * 5")));
+
+        assertThat(service.computeFee(new BigDecimal("20.00"), USER_ID))
+                .isEqualByComparingTo("20.00");
+    }
+
+    @Test
+    void invalidFormulaChargesNothing() {
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(formulaPlan("x +")));
 
         assertThat(service.computeFee(new BigDecimal("100.00"), USER_ID))
                 .isEqualByComparingTo("0");
+    }
+
+    @Test
+    void tableModeFindsIntervalsWithDecimalLimitsAndIntegerCoefficients() {
+        // Keys are written by the admin panel's JavaScript String(number): "0", "10.5"
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(tablePlan(
+                "[0, 10.5]",
+                "{\"0\": {\"maxFee\": 1, \"coefficients\": [0]}," +
+                        " \"10.5\": {\"maxFee\": 0.5, \"coefficients\": [0, 0.1]}}")));
+        when(paymentItemRepository.countByUserId(USER_ID)).thenReturn(2L);
+        when(paymentItemRepository.countByUserIdAndAbsAmountAtLeast(eq(USER_ID), any())).thenReturn(1L);
+
+        // freq = 0.5 → 0 + 0.1 * 0.5 = 5% of 100
+        assertThat(service.computeFee(new BigDecimal("100.00"), USER_ID))
+                .isEqualByComparingTo("5.00");
+    }
+
+    @Test
+    void tableModeIntervalWithoutRegressionChargesNothing() {
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.of(tablePlan(
+                "[0]",
+                "{\"0\": {\"maxFee\": 0.1, \"points\": [], \"coefficients\": null}}")));
+
+        assertThat(service.computeFee(new BigDecimal("100.00"), USER_ID))
+                .isEqualByComparingTo("0");
+    }
+
+    @Test
+    void intervalKeyMatchesJavaScriptNumberFormatting() {
+        assertThat(FeeEngineService.intervalKey(0.0)).isEqualTo("0");
+        assertThat(FeeEngineService.intervalKey(100.0)).isEqualTo("100");
+        assertThat(FeeEngineService.intervalKey(10.5)).isEqualTo("10.5");
+        assertThat(FeeEngineService.intervalKey(1000.25)).isEqualTo("1000.25");
     }
 
     @Test
@@ -270,7 +330,7 @@ class FeeEngineServiceTest {
     }
 
     @Test
-    void recomputeFeeRecordReplacesOldRecord() {
+    void recomputeFeeRecordUpdatesExistingRecordInPlace() {
         TransactionFeeRecord oldRecord = TransactionFeeRecord.builder()
                 .feeAmount(new BigDecimal("5.00"))
                 .originalAmount(new BigDecimal("-100.00"))
@@ -287,7 +347,28 @@ class FeeEngineServiceTest {
 
         assertThat(fee).isEqualByComparingTo("10.00");
         assertThat(item.getAmount()).isEqualByComparingTo("-210.00");
+        assertThat(oldRecord.getFeeAmount()).isEqualByComparingTo("10.00");
+        assertThat(oldRecord.getOriginalAmount()).isEqualByComparingTo("-200.00");
+        verify(feeRecordRepository).save(oldRecord);
+        verify(feeRecordRepository, never()).delete(any());
+    }
+
+    @Test
+    void recomputeFeeRecordRemovesRecordWhenNoFeeAppliesAnyMore() {
+        TransactionFeeRecord oldRecord = TransactionFeeRecord.builder()
+                .feeAmount(new BigDecimal("5.00"))
+                .originalAmount(new BigDecimal("-100.00"))
+                .build();
+        when(feeRecordRepository.findByPaymentItemId(7L)).thenReturn(Optional.of(oldRecord));
+        when(feePlanRepository.findByUserId(USER_ID)).thenReturn(Optional.empty());
+
+        PaymentItem item = paymentItem(new BigDecimal("-200.00"));
+        item.setId(7L);
+
+        assertThat(service.recomputeFeeRecord(item, USER_ID)).isEqualByComparingTo("0");
+        assertThat(item.getAmount()).isEqualByComparingTo("-200.00");
         verify(feeRecordRepository).delete(oldRecord);
+        verify(feeRecordRepository, never()).save(any());
     }
 
     // ─── computeRegressionCoefficients ───────────────────────────────
@@ -352,6 +433,13 @@ class FeeEngineServiceTest {
         plan.setMode("table");
         plan.setAmountTableJson(amountTableJson);
         plan.setIntervalDataJson(intervalDataJson);
+        return plan;
+    }
+
+    private static TransactionFeePlan formulaPlan(String formula) {
+        TransactionFeePlan plan = new TransactionFeePlan();
+        plan.setMode("formula");
+        plan.setFormulaText(formula);
         return plan;
     }
 

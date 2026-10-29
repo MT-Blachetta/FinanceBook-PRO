@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * Record of a fee applied to a specific payment item.
+ * Record of a fee applied to a specific payment item (at most one per item).
  * 
  * Stored so that fee refunds (on delete) and adjustments (on update)
  * can be processed accurately, independent of any later changes to
@@ -29,8 +29,8 @@ public class TransactionFeeRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "payment_item_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "payment_item_id", nullable = false, unique = true)
     private PaymentItem paymentItem;
     
     @ManyToOne(fetch = FetchType.LAZY)

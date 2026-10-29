@@ -106,6 +106,62 @@ class AuthIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
+    void passwordLongerThanBcryptLimitIsRejected() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of(
+                                "username", "auth_longpw",
+                                "password", "a".repeat(73),
+                                "surname", "T", "prename", "T"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Password must not be longer than 72 bytes"));
+    }
+
+    @Test
+    void blankNamesAreRejectedOnRegistration() throws Exception {
+        mockMvc.perform(post("/auth/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of(
+                                "username", "auth_blankname",
+                                "password", DEFAULT_PASSWORD,
+                                "surname", "   ", "prename", "T"))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void registrationStoresTheFullProfile() throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", "auth_fullprofile");
+        body.put("password", DEFAULT_PASSWORD);
+        body.put("surname", "Muster");
+        body.put("prename", "Erika");
+        body.put("birth_date", "1990-07-20");
+        body.put("phone", "0234 123456");
+        body.put("road", "Hauptstraße");
+        body.put("house_number", "42b");
+        body.put("region", "NRW");
+        body.put("postal", "44892");
+        body.put("city", "Bochum");
+        body.put("state", "Germany");
+
+        mockMvc.perform(post("/auth/register")
+                        .contentType(APPLICATION_JSON)
+                        .content(json(body)))
+                .andExpect(status().isOk());
+
+        String token = login("auth_fullprofile", DEFAULT_PASSWORD);
+        mockMvc.perform(get("/auth/me").header("Authorization", bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.birth_date").value("1990-07-20"))
+                .andExpect(jsonPath("$.house_number").value("42b"))
+                .andExpect(jsonPath("$.postal").value("44892"))
+                .andExpect(jsonPath("$.state").value("Germany"))
+                .andExpect(jsonPath("$.is_active").value(true))
+                .andExpect(jsonPath("$.is_admin").value(false))
+                .andExpect(jsonPath("$.hashed_password").doesNotExist());
+    }
+
+    @Test
     void missingRequiredFieldsAreRejected() throws Exception {
         Map<String, Object> body = new HashMap<>();
         body.put("username", "auth_nofields");
@@ -186,5 +242,27 @@ class AuthIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isUnauthorized());
 
         login("auth_pwchange", "newSecret9");
+    }
+
+    @Test
+    void profileUpdateRejectsBlankName() throws Exception {
+        String token = registerAndLogin("auth_blankupdate");
+
+        mockMvc.perform(put("/auth/me")
+                        .header("Authorization", bearer(token))
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of("surname", "   "))))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void profileUpdateRejectsPasswordLongerThanBcryptLimit() throws Exception {
+        String token = registerAndLogin("auth_longpwupdate");
+
+        mockMvc.perform(put("/auth/me")
+                        .header("Authorization", bearer(token))
+                        .contentType(APPLICATION_JSON)
+                        .content(json(Map.of("password", "ä".repeat(37))))) // 74 bytes in UTF-8
+                .andExpect(status().isBadRequest());
     }
 }

@@ -3,10 +3,10 @@ package com.financebook.service;
 import com.financebook.entity.PaymentItem;
 import com.financebook.entity.TransactionFeePlan;
 import com.financebook.entity.TransactionFeeRecord;
-import com.financebook.exception.ValidationException;
 import com.financebook.repository.PaymentItemRepository;
 import com.financebook.repository.TransactionFeePlanRepository;
 import com.financebook.repository.TransactionFeeRecordRepository;
+import com.financebook.util.FeeFormula;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalDouble;
 
 /**
  * Transaction fee computation engine for FinanceBook.
@@ -87,19 +89,31 @@ public class FeeEngineService {
     }
 
     /**
-     * Compute fee using formula mode.
+     * Compute fee using formula mode: the formula f(x, y) yields the absolute fee,
+     * with x = absolute payment amount and y = payment frequency.
+     * Mirrors Python's formula mode (fee = |f(x, y)|).
      */
     private BigDecimal computeFeeFormulaMode(TransactionFeePlan plan, BigDecimal absAmount, Long userId) {
-        if (plan.getFormulaText() == null || plan.getFormulaText().isEmpty()) {
+        if (plan.getFormulaText() == null || plan.getFormulaText().isBlank()) {
             return BigDecimal.ZERO;
         }
 
         double freq = getPaymentFrequency(userId, BigDecimal.ZERO, null);
 
-        // TODO: Implement safe formula evaluation
-        // For now, return 0 - this would need a proper expression evaluator
-        log.warn("Formula mode not yet fully implemented, returning 0 fee");
-        return BigDecimal.ZERO;
+        OptionalDouble raw = FeeFormula.evaluate(plan.getFormulaText(), absAmount.doubleValue(), freq);
+        if (raw.isEmpty()) {
+            log.warn("Fee formula of user {} could not be evaluated, no fee applied", userId);
+            return BigDecimal.ZERO;
+        }
+        return BigDecimal.valueOf(Math.abs(raw.getAsDouble()));
+    }
+
+    /**
+     * Key of an interval in intervalDataJson for a given lower limit.
+     * Matches the admin panel's JavaScript String(number): 0 -> "0", 100 -> "100", 10.5 -> "10.5".
+     */
+    static String intervalKey(double lowerLimit) {
+        return BigDecimal.valueOf(lowerLimit).stripTrailingZeros().toPlainString();
     }
 
     /**
@@ -134,14 +148,14 @@ public class FeeEngineService {
                 if (hi == null) {
                     // Last interval [lo, ∞)
                     if (absAmount.doubleValue() >= lo) {
-                        intervalKey = String.valueOf((int) lo);
+                        intervalKey = intervalKey(lo);
                         lower = lo;
                         upper = null;
                         break;
                     }
                 } else {
                     if (absAmount.doubleValue() >= lo && absAmount.doubleValue() < hi) {
-                        intervalKey = String.valueOf((int) lo);
+                        intervalKey = intervalKey(lo);
                         lower = lo;
                         upper = hi;
                         break;
@@ -158,13 +172,15 @@ public class FeeEngineService {
                 return BigDecimal.ZERO;
             }
 
-            double maxFeePct = ((Number) idata.getOrDefault("maxFee", 0.1)).doubleValue();
+            double maxFeePct = idata.get("maxFee") instanceof Number n ? n.doubleValue() : 0.1;
 
-            @SuppressWarnings("unchecked")
-            List<Double> coefficients = (List<Double>) idata.get("coefficients");
-            if (coefficients == null) {
-                return BigDecimal.ZERO;
+            // JSON numbers may be parsed as Integer or Double (e.g. [0, 0.05])
+            if (!(idata.get("coefficients") instanceof List<?> rawCoefficients) || rawCoefficients.isEmpty()) {
+                return BigDecimal.ZERO; // regression not run yet for this interval
             }
+            List<Double> coefficients = rawCoefficients.stream()
+                    .map(c -> ((Number) c).doubleValue())
+                    .toList();
 
             // Compute payment frequency for this interval
             double freq = getPaymentFrequency(userId, BigDecimal.valueOf(lower),
@@ -265,8 +281,9 @@ public class FeeEngineService {
     /**
      * Recompute the fee for a payment item whose gross amount changed.
      *
-     * Any previously applied fee is discarded (the item's amount is expected to
-     * already carry the new gross amount) and a fresh fee is computed and applied.
+     * The item's amount is expected to already carry the new gross amount. A fresh
+     * fee is computed and applied; the existing fee record is updated, or removed
+     * when no fee applies any more.
      *
      * @param paymentItem Payment item carrying the new gross amount
      * @param userId      User ID
@@ -274,9 +291,28 @@ public class FeeEngineService {
      */
     @Transactional
     public BigDecimal recomputeFeeRecord(PaymentItem paymentItem, Long userId) {
-        feeRecordRepository.findByPaymentItemId(paymentItem.getId())
-                .ifPresent(feeRecordRepository::delete);
-        return createFeeRecord(paymentItem, userId);
+        BigDecimal grossAmount = paymentItem.getAmount();
+        BigDecimal fee = computeFee(grossAmount, userId);
+        Optional<TransactionFeeRecord> existing = feeRecordRepository.findByPaymentItemId(paymentItem.getId());
+
+        if (fee.compareTo(BigDecimal.ZERO) <= 0) {
+            existing.ifPresent(feeRecordRepository::delete);
+            return BigDecimal.ZERO;
+        }
+
+        paymentItem.setAmount(applyFeeToAmount(grossAmount, fee));
+        paymentItemRepository.save(paymentItem);
+
+        // Update the existing record in place (a payment item has at most one fee record)
+        TransactionFeeRecord record = existing.orElseGet(() -> TransactionFeeRecord.builder()
+                .paymentItem(paymentItem)
+                .user(paymentItem.getUser())
+                .build());
+        record.setFeeAmount(fee);
+        record.setOriginalAmount(grossAmount);
+        feeRecordRepository.save(record);
+
+        return fee;
     }
 
     /**

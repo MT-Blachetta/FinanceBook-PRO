@@ -5,6 +5,8 @@
  * - Adds a development proxy so API calls to '/api/...' are transparently
  *   forwarded to the Java Spring Boot backend listening on port 8000.
  *   The 'rewrite' strips the '/api' prefix so routes match the backend exactly.
+ * - 'strictPort' makes the dev server fail if port 5173 is already in use
+ *   instead of silently switching to another port.
  */
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
@@ -19,6 +21,7 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    strictPort: true,
     proxy: {
       '/api': {
         target: 'http://localhost:8000',

@@ -7,9 +7,9 @@ import com.financebook.exception.ResourceNotFoundException;
 import com.financebook.exception.UnauthorizedException;
 import com.financebook.exception.ValidationException;
 import com.financebook.repository.*;
-import com.financebook.util.Constants;
 import com.financebook.util.DtoMapper;
 import com.financebook.util.NameNormalizer;
+import com.financebook.util.PasswordPolicy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -71,18 +71,16 @@ public class AdminService {
         
         // Update password if provided
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            if (request.getPassword().length() < Constants.MIN_PASSWORD_LENGTH) {
-                throw new ValidationException("Password must be at least " + Constants.MIN_PASSWORD_LENGTH + " characters");
-            }
+            PasswordPolicy.validate(request.getPassword());
             user.setHashedPassword(passwordEncoder.encode(request.getPassword()));
         }
         
         // Update name fields with normalization
         if (request.getSurname() != null) {
-            user.setSurname(NameNormalizer.normalize(request.getSurname()));
+            user.setSurname(requireName(request.getSurname(), "Surname"));
         }
         if (request.getPrename() != null) {
-            user.setPrename(NameNormalizer.normalize(request.getPrename()));
+            user.setPrename(requireName(request.getPrename(), "Prename"));
         }
         
         // Update other fields
@@ -145,5 +143,13 @@ public class AdminService {
         stats.put("categories", totalCategories);
         
         return stats;
+    }
+
+    private static String requireName(String raw, String label) {
+        String name = NameNormalizer.normalize(raw);
+        if (name.isEmpty()) {
+            throw new ValidationException(label + " cannot be empty");
+        }
+        return name;
     }
 }

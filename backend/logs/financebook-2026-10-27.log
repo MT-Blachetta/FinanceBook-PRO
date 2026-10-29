@@ -1,0 +1,523 @@
+2026-10-27 14:43:34.817 [main] INFO  c.financebook.FinanceBookApplication - Starting FinanceBookApplication using Java 17.0.10 with PID 32267 (/home/michael/Workspace/FinanceBook-PRO/backend/target/classes started by michael in /home/michael/Workspace/FinanceBook-PRO/backend)
+2026-10-27 14:43:34.819 [main] DEBUG c.financebook.FinanceBookApplication - Running with Spring Boot v3.2.2, Spring v6.1.3
+2026-10-27 14:43:34.819 [main] INFO  c.financebook.FinanceBookApplication - No active profile set, falling back to 1 default profile: "default"
+2026-10-27 14:43:35.044 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-27 14:43:35.064 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 7 JPA repository interfaces.
+2026-10-27 14:43:35.229 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8000 (http)
+2026-10-27 14:43:35.234 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8000"]
+2026-10-27 14:43:35.235 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-27 14:43:35.235 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2026-10-27 14:43:35.253 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-27 14:43:35.253 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 420 ms
+2026-10-27 14:43:35.286 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-27 14:43:35.331 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@35d7386b
+2026-10-27 14:43:35.332 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-27 14:43:35.356 [main] INFO  o.f.c.i.license.VersionPrinter - Flyway Community Edition 9.22.3 by Redgate
+2026-10-27 14:43:35.356 [main] INFO  o.f.c.i.license.VersionPrinter - See release notes here: https://rd.gt/416ObMi
+2026-10-27 14:43:35.356 [main] INFO  o.f.c.i.license.VersionPrinter - 
+2026-10-27 14:43:35.360 [main] INFO  org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:5500/financebook (PostgreSQL 15.19)
+2026-10-27 14:43:35.370 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+2026-10-27 14:43:35.371 [main] INFO  o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.004s)
+2026-10-27 14:43:35.376 [main] INFO  o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+2026-10-27 14:43:35.395 [main] INFO  o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+2026-10-27 14:43:35.399 [main] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - initial schema"
+2026-10-27 14:43:35.421 [main] INFO  o.f.core.internal.command.DbMigrate - Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.018s)
+2026-10-27 14:43:35.517 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-27 14:43:35.529 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-27 14:43:35.832 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 14:43:35.946 [main] DEBUG c.f.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-10-27 14:43:35.978 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-27 14:43:36.066 [main] INFO  c.f.config.FileUploadConfig - Created icons directory: /home/michael/Workspace/FinanceBook-PRO/backend/./icons
+2026-10-27 14:43:36.066 [main] INFO  c.f.config.FileUploadConfig - Created invoices directory: /home/michael/Workspace/FinanceBook-PRO/backend/./app/invoices
+2026-10-27 14:43:36.237 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-27 14:43:36.313 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@6472dd0c, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6a2c62ca, org.springframework.security.web.context.SecurityContextHolderFilter@a23ecf4, org.springframework.security.web.header.HeaderWriterFilter@bfd7235, org.springframework.web.filter.CorsFilter@1c247e5b, org.springframework.security.web.authentication.logout.LogoutFilter@46a94faf, com.financebook.security.JwtAuthenticationFilter@7154a248, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@3096a890, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@569b57c4, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@2a87d40f, org.springframework.security.web.session.SessionManagementFilter@cd7871e, org.springframework.security.web.access.ExceptionTranslationFilter@1a5d0d94, org.springframework.security.web.access.intercept.AuthorizationFilter@6f4327ab]
+2026-10-27 14:43:36.363 [main] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-10-27 14:43:36.419 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8000"]
+2026-10-27 14:43:36.424 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8000 (http) with context path ''
+2026-10-27 14:43:36.428 [main] INFO  c.financebook.FinanceBookApplication - Started FinanceBookApplication in 1.756 seconds (process running for 1.842)
+2026-10-27 14:43:36.462 [main] INFO  c.f.config.DatabaseInitializer - Creating default admin user
+2026-10-27 14:43:36.529 [main] INFO  c.f.config.DatabaseInitializer - Admin user created successfully with password from configuration
+2026-10-27 14:43:36.531 [main] INFO  c.f.config.DatabaseInitializer - Creating standard category type
+2026-10-27 14:43:36.532 [main] INFO  c.f.config.DatabaseInitializer - Standard category type created successfully
+2026-10-27 14:43:36.534 [main] INFO  c.f.config.DatabaseInitializer - Creating UNCLASSIFIED category
+2026-10-27 14:43:36.538 [main] INFO  c.f.config.DatabaseInitializer - UNCLASSIFIED category created successfully
+2026-10-27 14:43:36.539 [main] INFO  c.f.config.DatabaseInitializer - Database initialization complete
+2026-10-27 14:45:40.953 [http-nio-8000-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-27 14:45:40.953 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-27 14:45:40.954 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-10-27 14:45:40.961 [http-nio-8000-exec-1] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:45:40.987 [http-nio-8000-exec-2] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:46:00.559 [http-nio-8000-exec-3] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:46:00.566 [http-nio-8000-exec-4] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:50:02.302 [http-nio-8000-exec-7] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:50:02.309 [http-nio-8000-exec-8] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:50:47.743 [http-nio-8000-exec-10] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:51:45.145 [http-nio-8000-exec-1] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:51:45.151 [http-nio-8000-exec-2] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:52:01.177 [http-nio-8000-exec-3] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 14:52:01.184 [http-nio-8000-exec-4] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 16:38:26.398 [http-nio-8000-exec-7] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 16:38:26.405 [http-nio-8000-exec-8] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 16:46:05.091 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 16:46:05.092 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-27 16:46:05.093 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-27 20:34:41.374 [main] INFO  c.financebook.FinanceBookApplication - Starting FinanceBookApplication using Java 17.0.10 with PID 14062 (/home/michael/Workspace/FinanceBook-PRO/backend/target/classes started by michael in /home/michael/Workspace/FinanceBook-PRO/backend)
+2026-10-27 20:34:41.375 [main] DEBUG c.financebook.FinanceBookApplication - Running with Spring Boot v3.2.2, Spring v6.1.3
+2026-10-27 20:34:41.375 [main] INFO  c.financebook.FinanceBookApplication - No active profile set, falling back to 1 default profile: "default"
+2026-10-27 20:34:41.613 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-27 20:34:41.632 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 17 ms. Found 7 JPA repository interfaces.
+2026-10-27 20:34:41.796 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8000 (http)
+2026-10-27 20:34:41.802 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8000"]
+2026-10-27 20:34:41.803 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-27 20:34:41.803 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2026-10-27 20:34:41.820 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-27 20:34:41.820 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 432 ms
+2026-10-27 20:34:41.854 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-27 20:34:41.900 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2b79c8ff
+2026-10-27 20:34:41.900 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-27 20:34:41.925 [main] INFO  o.f.c.i.license.VersionPrinter - Flyway Community Edition 9.22.3 by Redgate
+2026-10-27 20:34:41.925 [main] INFO  o.f.c.i.license.VersionPrinter - See release notes here: https://rd.gt/416ObMi
+2026-10-27 20:34:41.925 [main] INFO  o.f.c.i.license.VersionPrinter - 
+2026-10-27 20:34:41.929 [main] INFO  org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:5500/financebook (PostgreSQL 15.19)
+2026-10-27 20:34:41.941 [main] INFO  o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.006s)
+2026-10-27 20:34:41.953 [main] INFO  o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-10-27 20:34:41.953 [main] INFO  o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-10-27 20:34:42.063 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-27 20:34:42.076 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-27 20:34:42.379 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 20:34:42.491 [main] DEBUG c.f.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-10-27 20:34:42.523 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-27 20:34:42.764 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-27 20:34:42.852 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@73c842dc, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@253cbe79, org.springframework.security.web.context.SecurityContextHolderFilter@747d1e03, org.springframework.security.web.header.HeaderWriterFilter@37445c57, org.springframework.web.filter.CorsFilter@5e66d85d, org.springframework.security.web.authentication.logout.LogoutFilter@3c3b7825, com.financebook.security.JwtAuthenticationFilter@6c427386, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@d8a5846, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7ccf6785, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1a6d072e, org.springframework.security.web.session.SessionManagementFilter@1d38ca2b, org.springframework.security.web.access.ExceptionTranslationFilter@434c0d22, org.springframework.security.web.access.intercept.AuthorizationFilter@5bfd3d0]
+2026-10-27 20:34:42.903 [main] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-10-27 20:34:42.958 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8000"]
+2026-10-27 20:34:42.963 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8000 (http) with context path ''
+2026-10-27 20:34:42.967 [main] INFO  c.financebook.FinanceBookApplication - Started FinanceBookApplication in 1.745 seconds (process running for 1.837)
+2026-10-27 20:34:43.010 [main] INFO  c.f.config.DatabaseInitializer - Database initialization complete
+2026-10-27 20:41:20.397 [http-nio-8000-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-27 20:41:20.397 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-27 20:41:20.398 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-10-27 20:41:20.404 [http-nio-8000-exec-1] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 20:41:20.428 [http-nio-8000-exec-2] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:36.549 [main] INFO  c.f.i.PaymentItemIntegrationTest - Starting PaymentItemIntegrationTest using Java 17.0.10 with PID 77005 (started by michael in /home/michael/Workspace/FinanceBook-PRO/backend)
+2026-10-27 21:42:36.549 [main] DEBUG c.f.i.PaymentItemIntegrationTest - Running with Spring Boot v3.2.2, Spring v6.1.3
+2026-10-27 21:42:36.549 [main] INFO  c.f.i.PaymentItemIntegrationTest - The following 1 profile is active: "test"
+2026-10-27 21:42:36.799 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-27 21:42:36.820 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 18 ms. Found 7 JPA repository interfaces.
+2026-10-27 21:42:37.112 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-27 21:42:37.121 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-27 21:42:37.186 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:financebook_test user=SA
+2026-10-27 21:42:37.187 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-27 21:42:37.195 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-27 21:42:37.576 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:42:37.708 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-27 21:42:37.838 [main] INFO  c.f.config.FileUploadConfig - Created icons directory: /tmp/financebook-test/icons
+2026-10-27 21:42:37.838 [main] INFO  c.f.config.FileUploadConfig - Created invoices directory: /tmp/financebook-test/invoices
+2026-10-27 21:42:38.035 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-27 21:42:38.156 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@23707d5d, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@5fa49615, org.springframework.security.web.context.SecurityContextHolderFilter@1b0964cf, org.springframework.security.web.header.HeaderWriterFilter@105fa381, org.springframework.web.filter.CorsFilter@7921eb37, org.springframework.security.web.authentication.logout.LogoutFilter@60c588cf, com.financebook.security.JwtAuthenticationFilter@76e56b17, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@84398a, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@365a9434, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3fdb9c55, org.springframework.security.web.session.SessionManagementFilter@5bb2f959, org.springframework.security.web.access.ExceptionTranslationFilter@56357e52, org.springframework.security.web.access.intercept.AuthorizationFilter@7c4b5d13]
+2026-10-27 21:42:38.241 [main] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-10-27 21:42:38.300 [main] DEBUG c.f.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-10-27 21:42:38.300 [main] INFO  o.s.b.t.m.w.SpringBootMockServletContext - Initializing Spring TestDispatcherServlet ''
+2026-10-27 21:42:38.300 [main] INFO  o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+2026-10-27 21:42:38.301 [main] INFO  o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+2026-10-27 21:42:38.309 [main] INFO  c.f.i.PaymentItemIntegrationTest - Started PaymentItemIntegrationTest in 1.888 seconds (process running for 2.232)
+2026-10-27 21:42:38.354 [main] INFO  c.f.config.DatabaseInitializer - Creating default admin user
+2026-10-27 21:42:38.417 [main] INFO  c.f.config.DatabaseInitializer - Admin user created successfully with password from configuration
+2026-10-27 21:42:38.419 [main] INFO  c.f.config.DatabaseInitializer - Creating standard category type
+2026-10-27 21:42:38.421 [main] INFO  c.f.config.DatabaseInitializer - Standard category type created successfully
+2026-10-27 21:42:38.422 [main] INFO  c.f.config.DatabaseInitializer - Creating UNCLASSIFIED category
+2026-10-27 21:42:38.427 [main] INFO  c.f.config.DatabaseInitializer - UNCLASSIFIED category created successfully
+2026-10-27 21:42:38.427 [main] INFO  c.f.config.DatabaseInitializer - Database initialization complete
+2026-10-27 21:42:40.097 [main] INFO  c.f.service.PaymentItemService - Updated payment item 7
+2026-10-27 21:42:40.102 [main] INFO  c.f.service.PaymentItemService - Updated payment item 7
+2026-10-27 21:42:40.106 [main] INFO  c.f.service.PaymentItemService - Deleted payment item 7
+2026-10-27 21:42:40.371 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:40.372 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:40.465 [main] INFO  c.f.service.PaymentItemService - Updated payment item 9
+2026-10-27 21:42:40.566 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.StatisticsIntegrationTest]: StatisticsIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:42:40.568 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.StatisticsIntegrationTest
+2026-10-27 21:42:40.928 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:41.020 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.ImportCsvIntegrationTest]: ImportCsvIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:42:41.021 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.ImportCsvIntegrationTest
+2026-10-27 21:42:41.197 [main] WARN  c.financebook.service.ImportService - Skipping CSV line, could not process it: Character n is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+2026-10-27 21:42:41.197 [main] WARN  c.financebook.service.ImportService - Skipping invalid CSV line (expected 7 columns, got 2)
+2026-10-27 21:42:41.207 [main] WARN  c.financebook.service.ImportService - Skipping CSV line, could not process it: Character n is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+2026-10-27 21:42:41.207 [main] WARN  c.financebook.service.ImportService - Skipping invalid CSV line (expected 7 columns, got 2)
+2026-10-27 21:42:41.211 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:41.213 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.CategoryIntegrationTest]: CategoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:42:41.213 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.CategoryIntegrationTest
+2026-10-27 21:42:41.401 [main] INFO  c.f.service.CategoryService - Deleted category 41 (Parent)
+2026-10-27 21:42:41.580 [main] INFO  c.f.service.CategoryService - Deleted category 45 (Temp cat)
+2026-10-27 21:42:41.582 [main] INFO  c.f.service.CategoryTypeService - Deleted category type 32 (temp type)
+2026-10-27 21:42:42.596 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.RecipientIntegrationTest]: RecipientIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:42:42.597 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.RecipientIntegrationTest
+2026-10-27 21:42:42.932 [main] INFO  c.f.service.RecipientService - Deleted recipient 6 (Old Employer)
+2026-10-27 21:42:43.260 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.AuthIntegrationTest]: AuthIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:42:43.261 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.AuthIntegrationTest
+2026-10-27 21:42:43.349 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:43.349 [main] ERROR c.f.security.JwtTokenProvider - Invalid JWT token
+2026-10-27 21:42:43.350 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:42:44.521 [main] ERROR c.f.service.FeeEngineService - Error computing table mode fee
+com.fasterxml.jackson.core.JsonParseException: Unexpected character ('n' (code 110)): was expecting double-quote to start field name
+ at [Source: (String)"{not valid json"; line: 1, column: 3]
+	at com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2477)
+	at com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:750)
+	at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase.java:674)
+	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddName(ReaderBasedJsonParser.java:1940)
+	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextFieldName(ReaderBasedJsonParser.java:968)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer._readAndBindStringKeyMap(MapDeserializer.java:596)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer.deserialize(MapDeserializer.java:449)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer.deserialize(MapDeserializer.java:32)
+	at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323)
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4825)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3772)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3755)
+	at com.financebook.service.FeeEngineService.computeFeeTableMode(FeeEngineService.java:130)
+	at com.financebook.service.FeeEngineService.computeFee(FeeEngineService.java:72)
+	at com.financebook.service.FeeEngineServiceTest.corruptIntervalJsonFallsBackToZeroFee(FeeEngineServiceTest.java:231)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:218)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:214)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:139)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+2026-10-27 21:42:44.553 [main] WARN  c.f.service.FeeEngineService - Fee formula of user 1 could not be evaluated, no fee applied
+2026-10-27 21:42:44.567 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:42:44.573 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-27 21:42:44.574 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-27 21:43:10.678 [main] INFO  c.financebook.FinanceBookApplication - Starting FinanceBookApplication using Java 17.0.10 with PID 78023 (/home/michael/Workspace/FinanceBook-PRO/backend/target/classes started by michael in /home/michael/Workspace/FinanceBook-PRO/backend)
+2026-10-27 21:43:10.679 [main] DEBUG c.financebook.FinanceBookApplication - Running with Spring Boot v3.2.2, Spring v6.1.3
+2026-10-27 21:43:10.679 [main] INFO  c.financebook.FinanceBookApplication - No active profile set, falling back to 1 default profile: "default"
+2026-10-27 21:43:10.896 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-27 21:43:10.914 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 16 ms. Found 7 JPA repository interfaces.
+2026-10-27 21:43:11.070 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8000 (http)
+2026-10-27 21:43:11.075 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8000"]
+2026-10-27 21:43:11.076 [main] INFO  o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-10-27 21:43:11.076 [main] INFO  o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.18]
+2026-10-27 21:43:11.092 [main] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring embedded WebApplicationContext
+2026-10-27 21:43:11.092 [main] INFO  o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 402 ms
+2026-10-27 21:43:11.126 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-27 21:43:11.169 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@45d4421d
+2026-10-27 21:43:11.170 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-27 21:43:11.192 [main] INFO  o.f.c.i.license.VersionPrinter - Flyway Community Edition 9.22.3 by Redgate
+2026-10-27 21:43:11.192 [main] INFO  o.f.c.i.license.VersionPrinter - See release notes here: https://rd.gt/416ObMi
+2026-10-27 21:43:11.192 [main] INFO  o.f.c.i.license.VersionPrinter - 
+2026-10-27 21:43:11.195 [main] INFO  org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:5500/financebook (PostgreSQL 15.19)
+2026-10-27 21:43:11.205 [main] INFO  o.f.core.internal.command.DbValidate - Successfully validated 2 migrations (execution time 00:00.005s)
+2026-10-27 21:43:11.216 [main] INFO  o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-10-27 21:43:11.221 [main] INFO  o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "2 - user and fee integrity"
+2026-10-27 21:43:11.229 [main] INFO  o.f.core.internal.command.DbMigrate - Successfully applied 1 migration to schema "public", now at version v2 (execution time 00:00.005s)
+2026-10-27 21:43:11.322 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-27 21:43:11.333 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: PostgreSQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-27 21:43:11.629 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:43:11.742 [main] DEBUG c.f.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-10-27 21:43:11.774 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-27 21:43:12.022 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-27 21:43:12.103 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@20f2ccfc, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6472dd0c, org.springframework.security.web.context.SecurityContextHolderFilter@b7da2c4, org.springframework.security.web.header.HeaderWriterFilter@7937a60e, org.springframework.web.filter.CorsFilter@6a2c62ca, org.springframework.security.web.authentication.logout.LogoutFilter@1b7a2459, com.financebook.security.JwtAuthenticationFilter@7154a248, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@3a7c75d9, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3096a890, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@1c247e5b, org.springframework.security.web.session.SessionManagementFilter@4a1978df, org.springframework.security.web.access.ExceptionTranslationFilter@762f5d34, org.springframework.security.web.access.intercept.AuthorizationFilter@670d2bbb]
+2026-10-27 21:43:12.151 [main] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-10-27 21:43:12.206 [main] INFO  o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8000"]
+2026-10-27 21:43:12.210 [main] INFO  o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8000 (http) with context path ''
+2026-10-27 21:43:12.214 [main] INFO  c.financebook.FinanceBookApplication - Started FinanceBookApplication in 1.673 seconds (process running for 1.759)
+2026-10-27 21:43:12.255 [main] INFO  c.f.config.DatabaseInitializer - Database initialization complete
+2026-10-27 21:44:15.924 [http-nio-8000-exec-1] INFO  o.a.c.c.C.[Tomcat].[localhost].[/] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-10-27 21:44:15.924 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-10-27 21:44:15.925 [http-nio-8000-exec-1] INFO  o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-10-27 21:44:17.209 [http-nio-8000-exec-6] ERROR c.f.security.JwtAuthenticationFilter - Could not set user authentication in security context
+org.springframework.security.core.userdetails.UsernameNotFoundException: User account is deactivated
+	at com.financebook.security.UserDetailsServiceImpl.loadUserByUsername(UserDetailsServiceImpl.java:34)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:351)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.transaction.interceptor.TransactionInterceptor$1.proceedWithInvocation(TransactionInterceptor.java:123)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:385)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:765)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:717)
+	at com.financebook.security.UserDetailsServiceImpl$$SpringCGLIB$$0.loadUserByUsername(<generated>)
+	at com.financebook.security.JwtAuthenticationFilter.doFilterInternal(JwtAuthenticationFilter.java:45)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:107)
+	at org.springframework.security.web.authentication.logout.LogoutFilter.doFilter(LogoutFilter.java:93)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.web.filter.CorsFilter.doFilterInternal(CorsFilter.java:91)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.header.HeaderWriterFilter.doHeadersAfter(HeaderWriterFilter.java:90)
+	at org.springframework.security.web.header.HeaderWriterFilter.doFilterInternal(HeaderWriterFilter.java:75)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:82)
+	at org.springframework.security.web.context.SecurityContextHolderFilter.doFilter(SecurityContextHolderFilter.java:69)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter.doFilterInternal(WebAsyncManagerIntegrationFilter.java:62)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.session.DisableEncodeUrlFilter.doFilterInternal(DisableEncodeUrlFilter.java:42)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.springframework.security.web.FilterChainProxy$VirtualFilterChain.doFilter(FilterChainProxy.java:374)
+	at org.springframework.security.web.FilterChainProxy.doFilterInternal(FilterChainProxy.java:233)
+	at org.springframework.security.web.FilterChainProxy.doFilter(FilterChainProxy.java:191)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.servlet.handler.HandlerMappingIntrospector.lambda$createCacheFilter$3(HandlerMappingIntrospector.java:195)
+	at org.springframework.web.filter.CompositeFilter$VirtualFilterChain.doFilter(CompositeFilter.java:113)
+	at org.springframework.web.filter.CompositeFilter.doFilter(CompositeFilter.java:74)
+	at org.springframework.security.config.annotation.web.configuration.WebMvcSecurityConfiguration$CompositeFilterChainProxy.doFilter(WebMvcSecurityConfiguration.java:225)
+	at org.springframework.web.filter.DelegatingFilterProxy.invokeDelegate(DelegatingFilterProxy.java:352)
+	at org.springframework.web.filter.DelegatingFilterProxy.doFilter(DelegatingFilterProxy.java:268)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.FormContentFilter.doFilterInternal(FormContentFilter.java:93)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.springframework.web.filter.CharacterEncodingFilter.doFilterInternal(CharacterEncodingFilter.java:201)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:174)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:149)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:167)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:482)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.service(CoyoteAdapter.java:340)
+	at org.apache.coyote.http11.Http11Processor.service(Http11Processor.java:391)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:63)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:896)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1744)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1191)
+	at org.apache.tomcat.util.threads.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:659)
+	at org.apache.tomcat.util.threads.TaskThread$WrappingRunnable.run(TaskThread.java:61)
+	at java.base/java.lang.Thread.run(Thread.java:840)
+2026-10-27 21:44:17.210 [http-nio-8000-exec-6] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:17.491 [http-nio-8000-exec-9] INFO  c.f.service.PaymentItemService - Updated payment item 2
+2026-10-27 21:44:17.554 [http-nio-8000-exec-2] INFO  c.f.service.PaymentItemService - Deleted payment item 2
+2026-10-27 21:44:35.551 [main] INFO  c.f.i.PaymentItemIntegrationTest - Starting PaymentItemIntegrationTest using Java 17.0.10 with PID 80097 (started by michael in /home/michael/Workspace/FinanceBook-PRO/backend)
+2026-10-27 21:44:35.552 [main] DEBUG c.f.i.PaymentItemIntegrationTest - Running with Spring Boot v3.2.2, Spring v6.1.3
+2026-10-27 21:44:35.552 [main] INFO  c.f.i.PaymentItemIntegrationTest - The following 1 profile is active: "test"
+2026-10-27 21:44:35.833 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-10-27 21:44:35.858 [main] INFO  o.s.d.r.c.RepositoryConfigurationDelegate - Finished Spring Data repository scanning in 22 ms. Found 7 JPA repository interfaces.
+2026-10-27 21:44:36.160 [main] INFO  o.s.o.j.p.SpringPersistenceUnitInfo - No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-10-27 21:44:36.170 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-10-27 21:44:36.233 [main] INFO  com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection conn0: url=jdbc:h2:mem:financebook_test user=SA
+2026-10-27 21:44:36.234 [main] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-10-27 21:44:36.243 [main] WARN  org.hibernate.orm.deprecation - HHH90000025: H2Dialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-10-27 21:44:36.656 [main] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:44:36.800 [main] INFO  o.s.d.j.r.query.QueryEnhancerFactory - Hibernate is in classpath; If applicable, HQL parser will be used.
+2026-10-27 21:44:37.154 [main] WARN  o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-10-27 21:44:37.286 [main] INFO  o.s.s.web.DefaultSecurityFilterChain - Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4f1502d7, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@1565c047, org.springframework.security.web.context.SecurityContextHolderFilter@6fefaeba, org.springframework.security.web.header.HeaderWriterFilter@1f5797d5, org.springframework.web.filter.CorsFilter@22a7d2f2, org.springframework.security.web.authentication.logout.LogoutFilter@59e5ecab, com.financebook.security.JwtAuthenticationFilter@7c4b7bc3, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@7534b2a4, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@4e58f26d, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@22479830, org.springframework.security.web.session.SessionManagementFilter@2e7de98a, org.springframework.security.web.access.ExceptionTranslationFilter@154c4f66, org.springframework.security.web.access.intercept.AuthorizationFilter@435e857c]
+2026-10-27 21:44:37.380 [main] WARN  o.s.b.a.t.ThymeleafAutoConfiguration$DefaultTemplateResolverConfiguration - Cannot find template location: classpath:/templates/ (please add some templates, check your Thymeleaf configuration, or set spring.thymeleaf.check-template-location=false)
+2026-10-27 21:44:37.442 [main] DEBUG c.f.security.JwtAuthenticationFilter - Filter 'jwtAuthenticationFilter' configured for use
+2026-10-27 21:44:37.442 [main] INFO  o.s.b.t.m.w.SpringBootMockServletContext - Initializing Spring TestDispatcherServlet ''
+2026-10-27 21:44:37.443 [main] INFO  o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+2026-10-27 21:44:37.443 [main] INFO  o.s.t.w.s.TestDispatcherServlet - Completed initialization in 0 ms
+2026-10-27 21:44:37.452 [main] INFO  c.f.i.PaymentItemIntegrationTest - Started PaymentItemIntegrationTest in 2.035 seconds (process running for 2.405)
+2026-10-27 21:44:37.492 [main] INFO  c.f.config.DatabaseInitializer - Creating default admin user
+2026-10-27 21:44:37.556 [main] INFO  c.f.config.DatabaseInitializer - Admin user created successfully with password from configuration
+2026-10-27 21:44:37.559 [main] INFO  c.f.config.DatabaseInitializer - Creating standard category type
+2026-10-27 21:44:37.560 [main] INFO  c.f.config.DatabaseInitializer - Standard category type created successfully
+2026-10-27 21:44:37.562 [main] INFO  c.f.config.DatabaseInitializer - Creating UNCLASSIFIED category
+2026-10-27 21:44:37.568 [main] INFO  c.f.config.DatabaseInitializer - UNCLASSIFIED category created successfully
+2026-10-27 21:44:37.568 [main] INFO  c.f.config.DatabaseInitializer - Database initialization complete
+2026-10-27 21:44:39.233 [main] INFO  c.f.service.PaymentItemService - Updated payment item 7
+2026-10-27 21:44:39.237 [main] INFO  c.f.service.PaymentItemService - Updated payment item 7
+2026-10-27 21:44:39.241 [main] INFO  c.f.service.PaymentItemService - Deleted payment item 7
+2026-10-27 21:44:39.509 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:39.510 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:39.604 [main] INFO  c.f.service.PaymentItemService - Updated payment item 9
+2026-10-27 21:44:39.707 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.StatisticsIntegrationTest]: StatisticsIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:44:39.708 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.StatisticsIntegrationTest
+2026-10-27 21:44:40.072 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:40.168 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.ImportCsvIntegrationTest]: ImportCsvIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:44:40.168 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.ImportCsvIntegrationTest
+2026-10-27 21:44:40.344 [main] WARN  c.financebook.service.ImportService - Skipping CSV line, could not process it: Character n is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+2026-10-27 21:44:40.344 [main] WARN  c.financebook.service.ImportService - Skipping invalid CSV line (expected 7 columns, got 2)
+2026-10-27 21:44:40.354 [main] WARN  c.financebook.service.ImportService - Skipping CSV line, could not process it: Character n is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+2026-10-27 21:44:40.354 [main] WARN  c.financebook.service.ImportService - Skipping invalid CSV line (expected 7 columns, got 2)
+2026-10-27 21:44:40.357 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:40.359 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.CategoryIntegrationTest]: CategoryIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:44:40.360 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.CategoryIntegrationTest
+2026-10-27 21:44:40.548 [main] INFO  c.f.service.CategoryService - Deleted category 41 (Parent)
+2026-10-27 21:44:40.729 [main] INFO  c.f.service.CategoryService - Deleted category 45 (Temp cat)
+2026-10-27 21:44:40.731 [main] INFO  c.f.service.CategoryTypeService - Deleted category type 32 (temp type)
+2026-10-27 21:44:41.735 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.RecipientIntegrationTest]: RecipientIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:44:41.736 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.RecipientIntegrationTest
+2026-10-27 21:44:42.070 [main] INFO  c.f.service.RecipientService - Deleted recipient 6 (Old Employer)
+2026-10-27 21:44:42.399 [main] INFO  o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.financebook.integration.AuthIntegrationTest]: AuthIntegrationTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-10-27 21:44:42.400 [main] INFO  o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.financebook.FinanceBookApplication for test class com.financebook.integration.AuthIntegrationTest
+2026-10-27 21:44:42.489 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:42.490 [main] ERROR c.f.security.JwtTokenProvider - Invalid JWT token
+2026-10-27 21:44:42.490 [main] ERROR c.f.s.JwtAuthenticationEntryPoint - Unauthorized error: Full authentication is required to access this resource
+2026-10-27 21:44:43.659 [main] ERROR c.f.service.FeeEngineService - Error computing table mode fee
+com.fasterxml.jackson.core.JsonParseException: Unexpected character ('n' (code 110)): was expecting double-quote to start field name
+ at [Source: (String)"{not valid json"; line: 1, column: 3]
+	at com.fasterxml.jackson.core.JsonParser._constructError(JsonParser.java:2477)
+	at com.fasterxml.jackson.core.base.ParserMinimalBase._reportError(ParserMinimalBase.java:750)
+	at com.fasterxml.jackson.core.base.ParserMinimalBase._reportUnexpectedChar(ParserMinimalBase.java:674)
+	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser._handleOddName(ReaderBasedJsonParser.java:1940)
+	at com.fasterxml.jackson.core.json.ReaderBasedJsonParser.nextFieldName(ReaderBasedJsonParser.java:968)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer._readAndBindStringKeyMap(MapDeserializer.java:596)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer.deserialize(MapDeserializer.java:449)
+	at com.fasterxml.jackson.databind.deser.std.MapDeserializer.deserialize(MapDeserializer.java:32)
+	at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:323)
+	at com.fasterxml.jackson.databind.ObjectMapper._readMapAndClose(ObjectMapper.java:4825)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3772)
+	at com.fasterxml.jackson.databind.ObjectMapper.readValue(ObjectMapper.java:3755)
+	at com.financebook.service.FeeEngineService.computeFeeTableMode(FeeEngineService.java:130)
+	at com.financebook.service.FeeEngineService.computeFee(FeeEngineService.java:72)
+	at com.financebook.service.FeeEngineServiceTest.corruptIntervalJsonFallsBackToZeroFee(FeeEngineServiceTest.java:231)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:728)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:218)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:214)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:139)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:69)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.invokeAll(SameThreadHierarchicalTestExecutorService.java:41)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:155)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	at org.junit.platform.engine.support.hierarchical.SameThreadHierarchicalTestExecutorService.submit(SameThreadHierarchicalTestExecutorService.java:35)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestExecutor.execute(HierarchicalTestExecutor.java:57)
+	at org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine.execute(HierarchicalTestEngine.java:54)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:198)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:169)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:93)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.lambda$execute$0(EngineExecutionOrchestrator.java:58)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.withInterceptedStreams(EngineExecutionOrchestrator.java:141)
+	at org.junit.platform.launcher.core.EngineExecutionOrchestrator.execute(EngineExecutionOrchestrator.java:57)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:103)
+	at org.junit.platform.launcher.core.DefaultLauncher.execute(DefaultLauncher.java:85)
+	at org.junit.platform.launcher.core.DelegatingLauncher.execute(DelegatingLauncher.java:47)
+	at org.apache.maven.surefire.junitplatform.LazyLauncher.execute(LazyLauncher.java:56)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.execute(JUnitPlatformProvider.java:184)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invokeAllTests(JUnitPlatformProvider.java:148)
+	at org.apache.maven.surefire.junitplatform.JUnitPlatformProvider.invoke(JUnitPlatformProvider.java:122)
+	at org.apache.maven.surefire.booter.ForkedBooter.runSuitesInProcess(ForkedBooter.java:385)
+	at org.apache.maven.surefire.booter.ForkedBooter.execute(ForkedBooter.java:162)
+	at org.apache.maven.surefire.booter.ForkedBooter.run(ForkedBooter.java:507)
+	at org.apache.maven.surefire.booter.ForkedBooter.main(ForkedBooter.java:495)
+2026-10-27 21:44:43.683 [main] WARN  c.f.service.FeeEngineService - Fee formula of user 1 could not be evaluated, no fee applied
+2026-10-27 21:44:43.696 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:44:43.703 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-27 21:44:43.704 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-10-27 21:44:46.989 [SpringApplicationShutdownHook] INFO  o.s.o.j.LocalContainerEntityManagerFactoryBean - Closing JPA EntityManagerFactory for persistence unit 'default'
+2026-10-27 21:44:46.990 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-10-27 21:44:46.991 [SpringApplicationShutdownHook] INFO  com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.

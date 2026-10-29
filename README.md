@@ -11,7 +11,7 @@ FinanceBook is a comprehensive tool for tracking expenses, incomes, and managing
 ### Backend (`backend/`)
 -   **Framework**: Spring Boot 3.2.2
 -   **Language**: Java 17
--   **Database**: PostgreSQL 15+
+-   **Database**: PostgreSQL 15 in a Docker container (host port 5500, see [Database Setup](#3-database-setup-postgresql-in-docker))
 -   **ORM**: Hibernate / Spring Data JPA
 -   **Security**: Spring Security with JWT Authentication
 -   **Build Tool**: Maven
@@ -107,19 +107,68 @@ node -v  # Should be v20.x.x
 npm -v   # Should be 10.x.x
 ```
 
-### 3. Database Setup (PostgreSQL)
+### 3. Database Setup (PostgreSQL in Docker)
 
-Ensure PostgreSQL 15+ is installed and running.
-```bash
-# Ubuntu/Debian
-sudo apt install postgresql postgresql-contrib
-sudo systemctl start postgresql
+The host already runs its own default PostgreSQL instance on port **5432**. FinanceBook does
+**not** use it and does **not** need a PostgreSQL installed on the host. Instead, its database runs
+in a separate PostgreSQL 15 Docker container, built from the project's `Dockerfile`. The
+container's internal port 5432 is published on host port **5500**:
 
-# Create the database
-sudo -u postgres psql -c "CREATE DATABASE financebook;"
-sudo -u postgres psql -c "CREATE USER yourself WITH PASSWORD 'secretPassword';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE financebook TO yourself;"
 ```
+host 127.0.0.1:5432  ->  host's default PostgreSQL        (not used by FinanceBook)
+host 127.0.0.1:5500  ->  container financebook-postgres:5432  (FinanceBook database)
+```
+
+#### Step 1: Install Docker
+Install Docker Engine (https://docs.docker.com/engine/install/) and allow your user to use it:
+```bash
+sudo usermod -aG docker $USER   # log out and back in afterwards
+sudo systemctl enable --now docker
+```
+
+#### Step 2: Start the database container
+```bash
+./scripts/start-db.sh
+```
+The script:
+1. checks that Docker is installed and the daemon is running,
+2. builds the image `financebook-postgres:15` from the `Dockerfile` (first run only),
+3. creates the container `financebook-postgres` with `-p 127.0.0.1:5500:5432` (first run) or starts the existing one,
+4. waits until PostgreSQL accepts connections.
+
+Database `financebook`, user `yourself` and password `secretPassword` are created automatically
+on first start (set in the `Dockerfile`, matching the backend defaults). Data is stored in the Docker
+volume `financebook-pgdata`, so it survives restarts and re-creating the container. The container
+uses `--restart unless-stopped`, so it comes back with the Docker daemon after a reboot.
+
+Stop the database with `./scripts/stop-db.sh`. The host's PostgreSQL on 5432 is never touched.
+
+Optional environment overrides for the scripts: `DB_BIND_ADDRESS` (default `127.0.0.1`; set
+`0.0.0.0` to reach the database from other machines), `DB_CONTAINER`, `DB_IMAGE`, `DB_VOLUME`.
+
+<details>
+<summary>Manual equivalent without the script</summary>
+
+```bash
+docker build -t financebook-postgres:15 - < Dockerfile
+docker run -d --name financebook-postgres --restart unless-stopped \
+    -p 127.0.0.1:5500:5432 -v financebook-pgdata:/var/lib/postgresql/data \
+    financebook-postgres:15
+
+# Connect with psql (note: port 5500, not 5432)
+psql -h localhost -p 5500 -U yourself financebook
+```
+</details>
+
+### Ports overview
+
+| Port | Used by |
+|------|---------|
+| 5432 | Host's own default PostgreSQL (not used by FinanceBook) |
+| 5500 | FinanceBook PostgreSQL Docker container (→ 5432 inside the container) |
+| 8000 | Spring Boot backend |
+| 5173 | Frontend dev server (Vite, `strictPort` — fails instead of switching ports) |
+| 8080 | Python admin panel (`backend/adminpanel`) |
 
 ---
 
@@ -130,7 +179,7 @@ The backend is configured via `src/main/resources/application.yml`. Key environm
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL Connection URL | `jdbc:postgresql://localhost:5500/financebook` |
+| `DATABASE_URL` | PostgreSQL Connection URL (the Docker container on host port 5500 — not the host's 5432) | `jdbc:postgresql://localhost:5500/financebook` |
 | `DATABASE_USERNAME` | Database User | `yourself` |
 | `DATABASE_PASSWORD` | Database Password | `secretPassword` |
 | `JWT_SECRET_KEY` | Secret for signing tokens | *(dev default provided)* |
@@ -145,7 +194,8 @@ The frontend uses a Vite proxy to communicate with the backend.
 
 ## Compiling, Installing, and Running
 
-Follow these steps to compile and run the application locally.
+Follow these steps to compile and run the application locally. Start order:
+**database container → backend → frontend**.
 
 ### Backend (Spring Boot)
 
@@ -166,12 +216,27 @@ Follow these steps to compile and run the application locally.
     ```
 
 3.  **Run the Application:**
-    Start the Spring Boot server.
+    From the repository root, start the backend with the start script:
     ```bash
-    mvn spring-boot:run
+    ./scripts/start-backend.sh
+    # extra arguments go to Maven, e.g.:
+    ./scripts/start-backend.sh -Dspring-boot.run.profiles=dev
     ```
+    Before the backend starts, the script
+    1. checks that ports **8000** (backend) and **5173** (frontend) are not already in use on the
+       host, and aborts with the process holding the port if one is,
+    2. ensures Docker is running with the PostgreSQL container on port **5500**
+       (`scripts/start-db.sh`, see [Database Setup](#3-database-setup-postgresql-in-docker)),
+    3. runs `mvn spring-boot:run` in `backend/`.
+
     The backend will start on port **8000**.
     *On first run, it will automatically create the database schema and a default admin user.*
+
+    Start the frontend only **after** the backend; otherwise its port 5173 is already taken and
+    the backend start script aborts.
+
+    *Running `mvn spring-boot:run` directly also works, but then the port checks are skipped and
+    the database container must already be running (`./scripts/start-db.sh`).*
 
 ### Frontend (React + Vite)
 
@@ -193,6 +258,38 @@ Follow these steps to compile and run the application locally.
     npm run dev
     ```
     The frontend will be accessible at **http://localhost:5173**.
+
+### Admin Panel (Python, port 8080)
+
+User management (create users, edit profiles, reset passwords, grant admin rights,
+activate/deactivate accounts) and the per-user transaction fee configuration live in the admin
+panel. Start it after the backend:
+```bash
+cd backend/adminpanel
+./run_admin.sh
+```
+Open **http://localhost:8080/admin/login** and log in with an admin account (default `admin` / `admin`).
+
+### Restarting after an update
+
+```bash
+# 1. Stop running instances with Ctrl+C in their terminals (frontend, admin panel, backend)
+
+# 2. Database container: keeps running; start it if it is stopped (data is kept in the volume)
+./scripts/start-db.sh
+
+# 3. Backend: applies pending database migrations (Flyway) automatically on startup
+./scripts/start-backend.sh
+
+# 4. Admin panel (new terminal)
+cd backend/adminpanel && ./run_admin.sh
+
+# 5. Frontend (new terminal)
+cd frontend && npm run dev
+```
+A full restart of the database container is only needed after changing the `Dockerfile`:
+`./scripts/stop-db.sh && docker rm financebook-postgres && ./scripts/start-db.sh`
+(data stays in the `financebook-pgdata` volume).
 
 ---
 
@@ -219,13 +316,20 @@ The static files will be generated in the `dist` directory.
 ### 3. Running in Production
 You can run the JAR file directly. For a complete deployment, you should serve the frontend static files using a web server like Nginx, using it as a reverse proxy to forward API requests to the Java backend.
 
+The database container must be running before the backend starts (`./scripts/start-db.sh`), and
+port 8000 must be free.
+
 **Example execution:**
 ```bash
+./scripts/start-db.sh
 export DATABASE_URL=jdbc:postgresql://localhost:5500/financebook_prod
 export DATABASE_USERNAME=prod_user
 export DATABASE_PASSWORD=prod_pass
 java -jar financebook-backend-0.1.0.jar
 ```
+The container only creates the database `financebook` and the user `yourself`. Create a different
+database or user first, e.g.
+`docker exec -it financebook-postgres psql -U yourself -d financebook -c "CREATE DATABASE financebook_prod;"`.
 
 ---
 
@@ -269,4 +373,21 @@ A: Ensure the backend is running on port 8000. Check the browser console network
 A: Ensure the `icons` directory is correctly pointed to in `application.yml` and contains the SVG files.
 
 **Q: Connection refused to localhost:8000?**
-A: The backend is not running or crashed. Check the terminal output where you ran `mvn spring-boot:run`.
+A: The backend is not running or crashed. Check the terminal output where you ran `./scripts/start-backend.sh`.
+
+**Q: "Port 8000 / 5173 is already in use"?**
+A: `./scripts/start-backend.sh` refuses to start when another process listens on one of these
+ports. It prints the process holding the port (`ss -ltnp 'sport = :8000'` shows it too). Stop that
+process, e.g. an old backend or frontend instance, and run the script again.
+
+**Q: "Docker is not installed" / "The Docker daemon is not running"?**
+A: The database runs in Docker. Install Docker or start the daemon (`sudo systemctl start docker`).
+On "permission denied", add your user to the `docker` group and log in again.
+
+**Q: "Host port 5500 is already in use by a non-Docker process"?**
+A: Something other than a Docker container occupies port 5500. Free it; FinanceBook's database
+container needs that port.
+
+**Q: Password authentication failed / database "financebook" does not exist?**
+A: Make sure you connect to port **5500** (the Docker container), not 5432 (the host's own
+PostgreSQL). Check that the container is running: `docker ps --filter name=financebook-postgres`.

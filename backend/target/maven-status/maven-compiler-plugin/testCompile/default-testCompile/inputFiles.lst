@@ -1,0 +1,11 @@
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/CategoryIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/ImportCsvIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/PaymentItemIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/RecipientIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/StatisticsIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/IntegrationTestBase.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/util/FeeFormulaTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/service/FeeEngineServiceTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/service/FileStorageServiceTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/integration/AuthIntegrationTest.java
+/home/michael/Workspace/FinanceBook-PRO/backend/src/test/java/com/financebook/util/NameNormalizerTest.java

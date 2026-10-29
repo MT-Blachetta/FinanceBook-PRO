@@ -30,6 +30,7 @@ public final class Constants {
     
     // Password constraints
     public static final int MIN_PASSWORD_LENGTH = 6;
+    public static final int MAX_PASSWORD_BYTES = 72; // bcrypt ignores everything beyond 72 bytes
     
     // File upload constraints
     public static final long MAX_INVOICE_SIZE = 25 * 1024 * 1024; // 25MB

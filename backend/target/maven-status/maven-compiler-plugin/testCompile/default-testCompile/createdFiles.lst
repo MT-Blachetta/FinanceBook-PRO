@@ -1,0 +1,11 @@
+com/financebook/service/FileStorageServiceTest.class
+com/financebook/integration/ImportCsvIntegrationTest.class
+com/financebook/integration/IntegrationTestBase.class
+com/financebook/integration/StatisticsIntegrationTest.class
+com/financebook/integration/AuthIntegrationTest.class
+com/financebook/integration/CategoryIntegrationTest.class
+com/financebook/integration/PaymentItemIntegrationTest.class
+com/financebook/integration/RecipientIntegrationTest.class
+com/financebook/util/NameNormalizerTest.class
+com/financebook/service/FeeEngineServiceTest.class
+com/financebook/util/FeeFormulaTest.class

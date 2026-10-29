@@ -6,24 +6,37 @@ session-based authentication (itsdangerous signed cookies).
 
 The admin panel allows:
   • Viewing all registered users
-  • Editing user details (name, address, phone, etc.)
+  • Creating users and editing their details (name, birth date, address, phone)
   • Resetting user passwords
+  • Granting / revoking admin rights
   • Activating / deactivating user accounts
+  • Configuring each user's transaction fee plan
 """
 from __future__ import annotations
 
+import json
+import math
+from datetime import date, datetime
 from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
-from auth import hash_password, verify_password, SECRET_KEY
+from auth import hash_password, password_policy_error, verify_password, SECRET_KEY
 from database import get_session
-from models import User, PaymentItem, Recipient, Category, CategoryType, TransactionFeePlan
+from models import (
+    User, PaymentItem, Recipient, Category, CategoryType, TransactionFeePlan,
+    MAX_USERNAME_LENGTH, MAX_USER_NAME_LENGTH, MAX_USER_PHONE_LENGTH,
+    MAX_USER_ROAD_LENGTH, MAX_USER_HOUSE_NUMBER_LENGTH, MAX_USER_REGION_LENGTH,
+    MAX_USER_POSTAL_LENGTH, MAX_USER_CITY_LENGTH, MAX_USER_STATE_LENGTH,
+    local_now,
+)
 from fee_engine import validate_formula
 
 # ─── Configuration ───────────────────────────────────────────────────
@@ -38,7 +51,21 @@ _signer = URLSafeTimedSerializer(SECRET_KEY)
 SESSION_COOKIE = "admin_session"
 SESSION_MAX_AGE = 3600  # 1 hour
 
+# Largest payment amount the database can hold (NUMERIC(10,2))
+MAX_AMOUNT = 99_999_999.99
+
 admin_router = APIRouter(prefix="/admin", tags=["Admin Website"])
+
+# Optional profile fields: form name -> (label, max length)
+_OPTIONAL_PROFILE_FIELDS = {
+    "phone": ("Phone", MAX_USER_PHONE_LENGTH),
+    "road": ("Street", MAX_USER_ROAD_LENGTH),
+    "house_number": ("House number", MAX_USER_HOUSE_NUMBER_LENGTH),
+    "region": ("Region", MAX_USER_REGION_LENGTH),
+    "postal": ("Postal code", MAX_USER_POSTAL_LENGTH),
+    "city": ("City", MAX_USER_CITY_LENGTH),
+    "state": ("State / country", MAX_USER_STATE_LENGTH),
+}
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────
@@ -66,6 +93,79 @@ def _require_admin(request: Request, session: Session) -> User:
     return user
 
 
+def _normalize(text: str) -> str:
+    """Trim and collapse internal whitespace (mirrors Java's NameNormalizer)."""
+    return " ".join(text.split())
+
+
+def _parse_birth_date(raw: str) -> Optional[date]:
+    """Parse a birth date given as YYYY-MM-DD or DD.MM.YYYY. Empty -> None."""
+    raw = raw.strip()
+    if not raw:
+        return None
+    for fmt in ("%Y-%m-%d", "%d.%m.%Y"):
+        try:
+            parsed = datetime.strptime(raw, fmt).date()
+            break
+        except ValueError:
+            continue
+    else:
+        raise ValueError("Invalid date of birth (use YYYY-MM-DD or DD.MM.YYYY)")
+    if parsed > date.today():
+        raise ValueError("Date of birth cannot be in the future")
+    return parsed
+
+
+def _clean_profile(form: dict) -> tuple[dict, Optional[str]]:
+    """Validate and normalize the profile fields shared by create and edit.
+
+    Returns ``(values, error)`` where *values* maps model attribute names to
+    cleaned values ready to be set on a :class:`User`.
+    """
+    values: dict = {}
+    for name, label in (("prename", "First name"), ("surname", "Last name")):
+        value = _normalize(form[name])
+        if not value:
+            return values, "First name and last name are required"
+        if len(value) > MAX_USER_NAME_LENGTH:
+            return values, f"{label} must not exceed {MAX_USER_NAME_LENGTH} characters"
+        values[name] = value
+
+    for name, (label, max_len) in _OPTIONAL_PROFILE_FIELDS.items():
+        value = form[name].strip()
+        if len(value) > max_len:
+            return values, f"{label} must not exceed {max_len} characters"
+        values[name] = value or None
+
+    try:
+        values["birth_date"] = _parse_birth_date(form["birth_date"])
+    except ValueError as exc:
+        return values, str(exc)
+
+    return values, None
+
+
+def _count(session: Session, model, user_id: Optional[int] = None) -> int:
+    """Count rows of *model*, optionally restricted to one user."""
+    query = select(func.count()).select_from(model)
+    if user_id is not None:
+        query = query.where(model.user_id == user_id)
+    return session.exec(query).one()
+
+
+def _render_user_detail(request: Request, session: Session, admin: User, user: User,
+                        success: Optional[str] = None, error: Optional[str] = None):
+    return templates.TemplateResponse(request, "user_detail.html", {
+        "admin": admin,
+        "user": user,
+        "payment_count": _count(session, PaymentItem, user.id),
+        "recipient_count": _count(session, Recipient, user.id),
+        "category_count": _count(session, Category, user.id),
+        "success": success,
+        "error": error,
+    })
+
+
 # ─── Routes ──────────────────────────────────────────────────────────
 
 @admin_router.get("/login", response_class=HTMLResponse)
@@ -74,7 +174,7 @@ def admin_login_page(request: Request):
     # If already logged in, redirect to dashboard
     if _get_admin_username(request):
         return RedirectResponse(url="/admin/dashboard", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(request, "login.html", {"error": None})
 
 
 @admin_router.post("/login", response_class=HTMLResponse)
@@ -85,21 +185,24 @@ def admin_login_submit(
     session: Session = Depends(get_session),
 ):
     """Process the admin login form."""
-    user = session.exec(select(User).where(User.username == username)).first()
+    user = session.exec(select(User).where(User.username == username.strip())).first()
     if not user or not verify_password(password, user.hashed_password):
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "Invalid username or password"},
+            {"error": "Invalid username or password"},
         )
     if not user.is_admin:
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "You do not have admin privileges"},
+            {"error": "You do not have admin privileges"},
         )
     if not user.is_active:
         return templates.TemplateResponse(
+            request,
             "login.html",
-            {"request": request, "error": "Your account has been deactivated"},
+            {"error": "Your account has been deactivated"},
         )
 
     # Set signed session cookie
@@ -130,21 +233,18 @@ def admin_dashboard(
 ):
     """Admin dashboard with overview statistics."""
     admin = _require_admin(request, session)
-    
-    total_users = len(session.exec(select(User)).all())
-    active_users = len(session.exec(select(User).where(User.is_active == True)).all())
-    total_payments = len(session.exec(select(PaymentItem)).all())
-    total_recipients = len(session.exec(select(Recipient)).all())
-    total_categories = len(session.exec(select(Category)).all())
 
-    return templates.TemplateResponse("dashboard.html", {
-        "request": request,
+    active_users = session.exec(
+        select(func.count()).select_from(User).where(User.is_active == True)  # noqa: E712
+    ).one()
+
+    return templates.TemplateResponse(request, "dashboard.html", {
         "admin": admin,
-        "total_users": total_users,
+        "total_users": _count(session, User),
         "active_users": active_users,
-        "total_payments": total_payments,
-        "total_recipients": total_recipients,
-        "total_categories": total_categories,
+        "total_payments": _count(session, PaymentItem),
+        "total_recipients": _count(session, Recipient),
+        "total_categories": _count(session, Category),
     })
 
 
@@ -154,20 +254,20 @@ def admin_users_list(
     search: str = "",
     session: Session = Depends(get_session),
 ):
-    """List all users with optional search."""
+    """List all users with optional (case-insensitive) search."""
     admin = _require_admin(request, session)
 
     query = select(User)
-    if search:
+    term = search.strip()
+    if term:
         query = query.where(
-            (User.username.contains(search))
-            | (User.surname.contains(search))
-            | (User.prename.contains(search))
+            (User.username.icontains(term))
+            | (User.surname.icontains(term))
+            | (User.prename.icontains(term))
         )
     users = session.exec(query.order_by(User.id)).all()
 
-    return templates.TemplateResponse("users.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "users.html", {
         "admin": admin,
         "users": users,
         "search": search,
@@ -180,11 +280,10 @@ def admin_user_create_page(
     session: Session = Depends(get_session),
 ):
     """Render the create user form."""
-    _require_admin(request, session)
-    return templates.TemplateResponse("user_create.html", {
-        "request": request,
-        "admin": _require_admin(request, session),
-        "form": {},
+    admin = _require_admin(request, session)
+    return templates.TemplateResponse(request, "user_create.html", {
+        "admin": admin,
+        "form": {"is_active": True},
         "error": None,
     })
 
@@ -204,8 +303,9 @@ def admin_user_create_submit(
     postal: str = Form(""),
     city: str = Form(""),
     state: str = Form(""),
+    # Unchecked checkboxes are not submitted at all, hence the "off" defaults
     is_admin: str = Form("off"),
-    is_active: str = Form("on"),
+    is_active: str = Form("off"),
     session: Session = Depends(get_session),
 ):
     """Process the create user form."""
@@ -221,69 +321,56 @@ def admin_user_create_submit(
     }
 
     def _render_error(msg: str):
-        return templates.TemplateResponse("user_create.html", {
-            "request": request, "admin": admin, "form": form_data, "error": msg,
+        return templates.TemplateResponse(request, "user_create.html", {
+            "admin": admin, "form": form_data, "error": msg,
         })
 
     # Validate
-    clean_username = username.strip()
+    clean_username = _normalize(username)
     if not clean_username:
         return _render_error("Username cannot be empty")
+    if len(clean_username) > MAX_USERNAME_LENGTH:
+        return _render_error(f"Username must not exceed {MAX_USERNAME_LENGTH} characters")
     if session.exec(select(User).where(User.username == clean_username)).first():
         return _render_error("Username already taken")
-    if len(password) < 6:
-        return _render_error("Password must be at least 6 characters")
-    if not surname.strip() or not prename.strip():
-        return _render_error("First name and last name are required")
+    password_error = password_policy_error(password)
+    if password_error:
+        return _render_error(password_error)
+    profile, profile_error = _clean_profile(form_data)
+    if profile_error:
+        return _render_error(profile_error)
 
-    # Parse optional date
-    parsed_birth_date = None
-    if birth_date.strip():
-        try:
-            from datetime import datetime
-            parsed_birth_date = datetime.strptime(birth_date.strip(), "%d.%m.%Y").date()
-        except ValueError:
-            return _render_error("Invalid date format (DD.MM.YYYY required)")
-
-    # Create user
+    # Create the user together with its default category type and
+    # UNCLASSIFIED category in one transaction (same as Java's /auth/register).
     new_user = User(
         username=clean_username,
         hashed_password=hash_password(password),
-        surname=surname.strip(),
-        prename=prename.strip(),
-        birth_date=parsed_birth_date,
-        phone=phone.strip() or None,
-        road=road.strip() or None,
-        house_number=house_number.strip() or None,
-        region=region.strip() or None,
-        postal=postal.strip() or None,
-        city=city.strip() or None,
-        state=state.strip() or None,
-        is_admin=is_admin == "on",
-        is_active=is_active == "on",
+        is_admin=form_data["is_admin"],
+        is_active=form_data["is_active"],
+        **profile,
     )
-    session.add(new_user)
-    session.commit()
-    session.refresh(new_user)
+    try:
+        session.add(new_user)
+        session.flush()
 
-    # Create default category type and UNCLASSIFIED category
-    standard_type = CategoryType(
-        name="standard",
-        description="Default category type for basic expense/income classification",
-        user_id=new_user.id,
-    )
-    session.add(standard_type)
-    session.commit()
-    session.refresh(standard_type)
+        standard_type = CategoryType(
+            name="standard",
+            description="Default category type for basic expense/income classification",
+            user_id=new_user.id,
+        )
+        session.add(standard_type)
+        session.flush()
 
-    unclassified = Category(
-        name="UNCLASSIFIED",
-        type_id=standard_type.id,
-        parent_id=None,
-        user_id=new_user.id,
-    )
-    session.add(unclassified)
-    session.commit()
+        session.add(Category(
+            name="UNCLASSIFIED",
+            type_id=standard_type.id,
+            parent_id=None,
+            user_id=new_user.id,
+        ))
+        session.commit()
+    except IntegrityError:
+        session.rollback()
+        return _render_error("Username already taken")
 
     return RedirectResponse(
         url=f"/admin/users/{new_user.id}?success=User+created+successfully",
@@ -296,36 +383,18 @@ def admin_user_detail(
     user_id: int,
     request: Request,
     success: str = "",
+    error: str = "",
     session: Session = Depends(get_session),
 ):
     """User detail / edit form."""
     admin = _require_admin(request, session)
-    
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Count user's data
-    payment_count = len(session.exec(
-        select(PaymentItem).where(PaymentItem.user_id == user_id)
-    ).all())
-    recipient_count = len(session.exec(
-        select(Recipient).where(Recipient.user_id == user_id)
-    ).all())
-    category_count = len(session.exec(
-        select(Category).where(Category.user_id == user_id)
-    ).all())
-
-    return templates.TemplateResponse("user_detail.html", {
-        "request": request,
-        "admin": admin,
-        "user": user,
-        "payment_count": payment_count,
-        "recipient_count": recipient_count,
-        "category_count": category_count,
-        "success": success or None,
-        "error": None,
-    })
+    return _render_user_detail(request, session, admin, user,
+                               success=success or None, error=error or None)
 
 
 @admin_router.post("/users/{user_id}", response_class=HTMLResponse)
@@ -343,67 +412,48 @@ def admin_user_update(
     city: str = Form(""),
     state: str = Form(""),
     new_password: str = Form(""),
-    is_active: str = Form("on"),
+    # Unchecked checkboxes are not submitted at all, hence the "off" defaults
+    is_admin: str = Form("off"),
+    is_active: str = Form("off"),
     session: Session = Depends(get_session),
 ):
-    """Save user changes from the detail form."""
+    """Save user changes from the detail form.
+
+    All input is validated first; on any error nothing is saved.
+    """
     admin = _require_admin(request, session)
-    
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.surname = surname.strip()
-    user.prename = prename.strip()
-    user.phone = phone.strip() or None
-    user.road = road.strip() or None
-    user.house_number = house_number.strip() or None
-    user.region = region.strip() or None
-    user.postal = postal.strip() or None
-    user.city = city.strip() or None
-    user.state = state.strip() or None
-    user.is_active = is_active == "on"
-
-    if birth_date.strip():
-        try:
-            from datetime import date as date_type
-            user.birth_date = date_type.fromisoformat(birth_date.strip())
-        except ValueError:
-            pass  # keep existing value
-
-    error = None
-    if new_password.strip():
-        if len(new_password.strip()) < 6:
-            error = "Password must be at least 6 characters"
-        else:
-            user.hashed_password = hash_password(new_password.strip())
-
-    if not error:
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-
-    # Count user's data for the template
-    payment_count = len(session.exec(
-        select(PaymentItem).where(PaymentItem.user_id == user_id)
-    ).all())
-    recipient_count = len(session.exec(
-        select(Recipient).where(Recipient.user_id == user_id)
-    ).all())
-    category_count = len(session.exec(
-        select(Category).where(Category.user_id == user_id)
-    ).all())
-
-    return templates.TemplateResponse("user_detail.html", {
-        "request": request,
-        "admin": admin,
-        "user": user,
-        "payment_count": payment_count,
-        "recipient_count": recipient_count,
-        "category_count": category_count,
-        "success": "User updated successfully" if not error else None,
-        "error": error,
+    profile, error = _clean_profile({
+        "prename": prename, "surname": surname, "phone": phone,
+        "birth_date": birth_date, "road": road, "house_number": house_number,
+        "region": region, "postal": postal, "city": city, "state": state,
     })
+    if not error and new_password:
+        error = password_policy_error(new_password)
+    if not error and user.id == admin.id and is_active != "on":
+        error = "You cannot deactivate your own account"
+    if not error and user.id == admin.id and is_admin != "on":
+        error = "You cannot remove your own admin rights"
+    if error:
+        return _render_user_detail(request, session, admin, user, error=error)
+
+    for name, value in profile.items():
+        setattr(user, name, value)
+    user.is_admin = is_admin == "on"
+    user.is_active = is_active == "on"
+    if new_password:
+        user.hashed_password = hash_password(new_password)
+
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+
+    return _render_user_detail(request, session, admin, user,
+                               success="User updated successfully")
 
 
 @admin_router.post("/users/{user_id}/deactivate", response_class=HTMLResponse)
@@ -414,7 +464,7 @@ def admin_user_toggle_active(
 ):
     """Toggle user active status."""
     admin = _require_admin(request, session)
-    
+
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -425,10 +475,67 @@ def admin_user_toggle_active(
     session.add(user)
     session.commit()
 
-    return RedirectResponse(url=f"/admin/users/{user_id}", status_code=302)
+    message = "User+activated" if user.is_active else "User+deactivated"
+    return RedirectResponse(url=f"/admin/users/{user_id}?success={message}", status_code=302)
 
 
 # ─── Fee Configuration ──────────────────────────────────────────────
+
+def _is_number(value) -> bool:
+    return (isinstance(value, (int, float)) and not isinstance(value, bool)
+            and math.isfinite(value))
+
+
+def _fee_plan_error(body: dict) -> Optional[str]:
+    """Validate a fee plan payload from the fee configuration page."""
+    mode = body.get("mode", "table")
+    if mode not in ("table", "formula"):
+        return "mode must be 'table' or 'formula'"
+
+    if mode == "formula":
+        formula = body.get("formula_text")
+        if not isinstance(formula, str) or not validate_formula(formula):
+            return "Invalid fee formula"
+
+    table = body.get("amount_table", [0])
+    if (not isinstance(table, list) or not table
+            or not all(_is_number(v) for v in table)):
+        return "amount_table must be a non-empty list of numbers"
+    if table[0] != 0:
+        return "amount_table must start with 0"
+    if any(b <= a for a, b in zip(table, table[1:])):
+        return "amount_table must be strictly increasing"
+    if table[-1] > MAX_AMOUNT:
+        return f"amount_table values must not exceed {MAX_AMOUNT}"
+
+    intervals = body.get("interval_data", {})
+    if not isinstance(intervals, dict):
+        return "interval_data must be an object"
+    for key, idata in intervals.items():
+        if not isinstance(idata, dict):
+            return f"interval_data[{key}] must be an object"
+        max_fee = idata.get("maxFee", 0.1)
+        if not _is_number(max_fee) or max_fee <= 0:
+            return f"interval_data[{key}].maxFee must be a positive number"
+        coefficients = idata.get("coefficients")
+        if coefficients is not None and (
+                not isinstance(coefficients, list)
+                or not all(_is_number(c) for c in coefficients)):
+            return f"interval_data[{key}].coefficients must be a list of numbers"
+        points = idata.get("points", [])
+        if not isinstance(points, list) or not all(
+                isinstance(p, dict) and _is_number(p.get("freq")) and _is_number(p.get("fee"))
+                for p in points):
+            return f"interval_data[{key}].points must be a list of {{freq, fee}} numbers"
+    return None
+
+
+def _require_user(session: Session, user_id: int) -> User:
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
+
 
 @admin_router.get("/fees", response_class=HTMLResponse)
 def admin_fees_page(
@@ -439,8 +546,7 @@ def admin_fees_page(
     admin = _require_admin(request, session)
     users = session.exec(select(User).order_by(User.id)).all()
 
-    return templates.TemplateResponse("fee_config.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "fee_config.html", {
         "admin": admin,
         "users": users,
     })
@@ -454,8 +560,8 @@ def get_fee_plan(
 ):
     """Return the fee plan for a specific user as JSON."""
     _require_admin(request, session)
+    _require_user(session, user_id)
 
-    import json
     plan = session.exec(
         select(TransactionFeePlan).where(TransactionFeePlan.user_id == user_id)
     ).first()
@@ -485,9 +591,11 @@ def save_fee_plan(
 ):
     """Save/update the fee plan for a specific user."""
     _require_admin(request, session)
+    _require_user(session, user_id)
 
-    import json
-    from datetime import datetime
+    error = _fee_plan_error(body)
+    if error:
+        return JSONResponse(status_code=400, content={"detail": error})
 
     plan = session.exec(
         select(TransactionFeePlan).where(TransactionFeePlan.user_id == user_id)
@@ -497,14 +605,13 @@ def save_fee_plan(
         plan = TransactionFeePlan(user_id=user_id)
 
     plan.mode = body.get("mode", "table")
-    plan.formula_text = body.get("formula_text", None)
+    plan.formula_text = body.get("formula_text") if plan.mode == "formula" else None
     plan.amount_table_json = json.dumps(body.get("amount_table", [0]))
     plan.interval_data_json = json.dumps(body.get("interval_data", {}))
-    plan.updated_at = datetime.utcnow()
+    plan.updated_at = local_now()
 
     session.add(plan)
     session.commit()
-    session.refresh(plan)
 
     return {"status": "ok"}
 
@@ -520,7 +627,6 @@ def validate_formula_endpoint(
     _require_admin(request, session)
 
     formula = body.get("formula", "")
-    is_valid = validate_formula(formula)
+    is_valid = isinstance(formula, str) and validate_formula(formula)
 
     return {"valid": is_valid}
-

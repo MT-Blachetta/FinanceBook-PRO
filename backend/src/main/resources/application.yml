@@ -5,6 +5,9 @@ spring:
   jackson:
     property-naming-strategy: SNAKE_CASE
   
+  # PostgreSQL runs in the Docker container 'financebook-postgres' (see Dockerfile and
+  # scripts/start-db.sh), published on host port 5500. Port 5432 belongs to the host's
+  # own default PostgreSQL instance and is not used by FinanceBook.
   datasource:
     url: ${DATABASE_URL:jdbc:postgresql://localhost:5500/financebook}
     username: ${DATABASE_USERNAME:yourself}

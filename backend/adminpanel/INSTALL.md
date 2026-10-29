@@ -5,7 +5,9 @@
 ### System Requirements
 
 - Python 3.10 or higher
-- PostgreSQL 15+ (same database as Java backend)
+- FinanceBook's PostgreSQL Docker container on host port **5500** (same database as the Java backend;
+  start it with `./scripts/start-db.sh` from the repository root). The host's own default
+  PostgreSQL on port 5432 is **not** used.
 - Linux, macOS, or Windows with WSL
 
 ### System Dependencies

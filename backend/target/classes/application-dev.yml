@@ -1,0 +1,37 @@
+# Development profile configuration
+# Override settings for local development
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5500/financebook
+    username: yourself
+    password: secretPassword
+  
+  jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+# Logging
+logging:
+  level:
+    com.financebook: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# JWT (development only - use strong secret in production!)
+jwt:
+  secret: dev-secret-key-change-in-production-to-something-very-long-and-random
+  expiration: 1800000  # 30 minutes
+
+# Admin
+admin:
+  default-password: admin
+  session-secret: dev-admin-session-secret
+
+# Swagger
+springdoc:
+  swagger-ui:
+    enabled: true
